@@ -1,0 +1,90 @@
+.mocktest-page {
+  padding: 2rem;
+  background: linear-gradient(to bottom right, #dfe9f3, #ffffff);
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.mocktest-title {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+  color: #1e293b;
+}
+
+.mocktest-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.mocktest-card {
+  background-color: #f1f5f9;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.mocktest-card:hover {
+  transform: translateY(-6px);
+  background-color: #e2e8f0;
+}
+
+.mock-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.mock-icon.java {
+  color: #e76f00;
+}
+
+.mock-icon.python {
+  color: #ffda44;
+}
+
+.mock-icon.js {
+  color: #f7df1e;
+}
+
+.mock-icon.sql {
+  color: #2b6cb0;
+}
+
+.mock-icon.html {
+  color: #f16529;
+}
+
+.mock-icon.react {
+  color: #61dafb;
+}
+
+.mock-icon.css {
+  color: #2965f1;
+}
+
+.mock-icon.cpp {
+  color: #00599c;
+}
+
+.mock-icon.c {
+  color: #97bce2;
+}
+.mock-icon.mysql {
+  color: #00758f;
+}
+
+.mocktest-card h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+  color: #0f172a;
+}
+
+.mocktest-card p {
+  font-size: 1rem;
+  margin: 0.25rem 0;
+  color: #334155;
+}

@@ -1,0 +1,196 @@
+.profile-wrapper {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column; 
+  align-items: center;
+  background: linear-gradient(135deg, #fdfcfb, #e2d1c3);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.profile-container {
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin-bottom: 3rem; 
+}
+
+.profile-title {
+  font-size: 2.2rem;
+  color: #1e293b;
+  margin-bottom: 4rem;
+  font-weight: bold;
+}
+
+.profile-card {
+  position: relative;
+  background: linear-gradient(135deg, #3b82f6, #9333ea);
+  color: white;
+  border-radius: 12px;
+  padding: 4rem 2rem 2rem;
+  font-size: 1.1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: left;
+}
+
+.profile-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+}
+
+.profile-card p {
+  margin: 1rem 0;
+}
+
+.profile-card strong {
+  color: #ffe082;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: white;
+  color: #3b82f6;
+  font-size: 2.5rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  border: 4px solid #9333ea;
+}
+
+.edit-icon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  color: #ffe082;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.edit-icon:hover {
+  transform: scale(1.2);
+  color: #fff;
+}
+
+.profile-input {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  margin: 0.5rem 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.profile-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #9333ea66;
+}
+
+.input-group {
+  margin-bottom: 1rem;
+}
+
+.edit-buttons {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.save-btn,
+.cancel-btn {
+  background-color: white;
+  border: 2px solid #9333ea;
+  color: #9333ea;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.save-btn:hover {
+  background-color: #9333ea;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #e11d48;
+  color: white;
+  border-color: #e11d48;
+}
+
+.loading {
+  font-size: 1.2rem;
+  color: #64748b;
+}
+
+.big-stats-container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto 2rem;
+  padding: 40px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transform: scale(1.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.big-stats-container:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.big-stats-container h3 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #1e293b;
+}
+
+.progress-chart {
+  margin-top: 20px;
+  background: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.progress-chart h3 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+@media (max-width: 500px) {
+  .profile-container {
+    padding: 1.5rem;
+  }
+
+  .profile-title {
+    font-size: 1.6rem;
+  }
+
+  .profile-card {
+    font-size: 1rem;
+    padding: 1.5rem;
+  }
+
+  .big-stats-container {
+    padding: 20px;
+  }
+}
