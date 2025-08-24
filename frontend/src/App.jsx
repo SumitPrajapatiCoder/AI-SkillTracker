@@ -17,6 +17,8 @@ import { ToastContainer } from "react-toastify";
 import UploadQuestion from "./pages/admin/uploadQuestion";
 import UserList from "./pages/admin/userList";
 import AllQuestion from "./pages/admin/questionList";
+import UploadCardDetails from "./pages/admin/uploadCardDetails";
+import ListCardDetails from "./pages/admin/listCardDetails";
 import "react-toastify/dist/ReactToastify.css";
 
 
@@ -25,6 +27,26 @@ function App() {
     <BrowserRouter>
       <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
+        <Route
+          path="/upload-card"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <UploadCardDetails />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/get-card"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ListCardDetails />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/upload"
           element={

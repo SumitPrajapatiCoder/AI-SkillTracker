@@ -17,22 +17,9 @@ const AdminQuestionList = () => {
   const [search, setSearch] = useState("");
   const [language, setLanguage] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [editMode, setEditMode] = useState(null);
   const [editForm, setEditForm] = useState({});
-
-  const languages = [
-    "Java",
-    "C",
-    "Cpp",
-    "Python",
-    "MySQL",
-    "SQL",
-    "Javascript",
-    "HTML",
-    "CSS",
-    "React",
-  ];
+  const [languages, setLanguages] = useState([]);
 
   const cleanCode = (code) =>
     code
@@ -58,8 +45,19 @@ const AdminQuestionList = () => {
     }
   };
 
+  const fetchLanguages = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/v1/admin/get-languages", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setLanguages(res.data.data || []);
+    } catch (err) {
+      console.error("Fetch Languages Error:", err);
+      toast.error("Failed to load languages");
+    }
+  };
 
-  
   const handleDelete = async (id) => {
     const result = await MySwal.fire({
       title: "Are you sure?",
@@ -118,12 +116,11 @@ const AdminQuestionList = () => {
 
   const totalCount = questions.length;
   const languageCounts = languages.reduce((acc, lang) => {
-    acc[lang] = questions.filter(
-      (q) => q.language?.toLowerCase() === lang.toLowerCase()
+    acc[lang.name] = questions.filter(
+      (q) => q.language?.toLowerCase() === lang.name.toLowerCase()
     ).length;
     return acc;
   }, {});
-
 
   useEffect(() => {
     hljs.highlightAll();
@@ -132,6 +129,11 @@ const AdminQuestionList = () => {
   useEffect(() => {
     fetchQuestions();
   }, [type, language]);
+
+
+  useEffect(() => {
+    fetchLanguages();
+  }, []);
 
   return (
     <div className="admin-form">
@@ -156,17 +158,18 @@ const AdminQuestionList = () => {
 
           {languages.map((lang) => (
             <option
-              key={lang}
-              value={lang}
+              key={lang._id}
+              value={lang.name}
               style={{
-                color: language === lang ? "red" : "inherit",
-                fontWeight: language === lang ? "bold" : "normal",
+                color: language === lang.name ? "red" : "inherit",
+                fontWeight: language === lang.name ? "bold" : "normal",
               }}
             >
-              {lang} ({languageCounts[lang]})
+              {lang.name} ({languageCounts[lang.name] || 0})
             </option>
           ))}
         </select>
+
         <input
           type="text"
           placeholder="Search by language or question"

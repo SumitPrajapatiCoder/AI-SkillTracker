@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../../styles/uploadQuestion.css";
 import { toast } from "react-toastify";
@@ -12,40 +12,69 @@ const AdminUpload = () => {
   const [options, setOptions] = useState(["", "", "", ""]);
   const [correctAnswer, setCorrectAnswer] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
+  const [languages, setLanguages] = useState([]);
 
-  const languages = [
-    "Java",
-    "C",
-    "Cpp",
-    "Python",
-    "MySQL",
-    "SQL",
-    "Javascript",
-    "HTML",
-    "CSS",
-    "React",
-  ];
+
+  const [showLangForm, setShowLangForm] = useState(false);
+  const [newLang, setNewLang] = useState("");
 
   const difficulties = ["Easy", "Medium", "Hard"];
+
+  
+  const fetchLanguages = async () => {
+    try {
+       const token = localStorage.getItem("token");
+      const res = await axios.get("/api/v1/admin/get-languages", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setLanguages(res.data.data);
+    } catch (err) {
+      console.error("Fetch Languages Error:", err);
+      toast.error("Failed to load languages");
+    }
+  };
+
+  useEffect(() => {
+    fetchLanguages();
+  }, []);
+
+  const handleUploadLanguage = async (e) => {
+    e.preventDefault();
+    if (!newLang.trim()) {
+      toast.error("Language name required");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        "/api/v1/admin/upload-language",
+        { name: newLang.trim() },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Language uploaded!");
+      setNewLang("");
+      setShowLangForm(false);
+      fetchLanguages();
+    } catch (err) {
+      console.error("Upload Language Error:", err);
+      toast.error(err.response?.data?.message || "Failed to upload language");
+    }
+  };
 
   const handleGenerateAI = async () => {
     if (!language || !difficulty) {
       toast.error("Please select both language and difficulty");
       return;
     }
-
     try {
       setLoadingAI(true);
       const token = localStorage.getItem("token");
-
       const res = await axios.post(
         "/api/v1/admin/generate-ai",
         { language, difficulty, type },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const {
@@ -60,11 +89,11 @@ const AdminUpload = () => {
       toast.success("AI-generated question loaded!");
     } catch (err) {
       console.error("AI Generation Error:", err);
-      const errorMsg =
+      toast.error(
         err.response?.data?.message ||
-        err.message ||
-        "Unknown error while generating AI question.";
-      toast.error(errorMsg);
+          err.message ||
+          "Unknown error while generating AI question."
+      );
     } finally {
       setLoadingAI(false);
     }
@@ -74,22 +103,10 @@ const AdminUpload = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-
       await axios.post(
         "/api/v1/admin/upload-question",
-        {
-          type,
-          language,
-          difficulty,
-          question,
-          options,
-          correctAnswer,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { type, language, difficulty, question, options, correctAnswer },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success("Question uploaded!");
@@ -109,8 +126,32 @@ const AdminUpload = () => {
       <button type="button" onClick={handleGenerateAI} disabled={loadingAI}>
         {loadingAI ? "Generating..." : "Generate with AI"}
       </button>
+      
+      <div className="upload-language-section">
+        <button
+          type="button"
+          onClick={() => setShowLangForm(!showLangForm)}
+          className="toggle-btn"
+        >
+          {showLangForm ? "Cancel" : "Upload Language"}
+        </button>
+
+        {showLangForm && (
+          <form onSubmit={handleUploadLanguage} className="lang-form">
+            <input
+              type="text"
+              placeholder="Enter new language"
+              value={newLang}
+              onChange={(e) => setNewLang(e.target.value)}
+              required
+            />
+            <button type="submit">Add Language</button>
+          </form>
+        )}
+      </div>
 
       <h2>Upload {type === "quiz" ? "Quiz" : "Mock"} Question</h2>
+
       <form onSubmit={handleSubmit}>
         <select value={type} onChange={(e) => setType(e.target.value)}>
           <option value="quiz">Quiz</option>
@@ -124,8 +165,8 @@ const AdminUpload = () => {
         >
           <option value="">Select Language</option>
           {languages.map((lang) => (
-            <option key={lang} value={lang}>
-              {lang}
+            <option key={lang._id} value={lang.name}>
+              {lang.name}
             </option>
           ))}
         </select>

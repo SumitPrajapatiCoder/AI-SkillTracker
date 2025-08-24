@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import "../styles/quizlanguage.css";
 import { toast } from "react-toastify";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
+import "../styles/quizlanguage.css";
 
 const QuizLanguage = () => {
   const { language } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { cardQuestions, cardTime } = location.state || {};
+
+  const [allQuestions, setAllQuestions] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
-  const [score, setScore] = useState(0);
-  const [timer, setTimer] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [answers, setAnswers] = useState({}); 
   const [completed, setCompleted] = useState(false);
-  const navigate = useNavigate();
+  const [timer, setTimer] = useState(0);
 
- 
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
@@ -24,9 +26,7 @@ const QuizLanguage = () => {
         const res = await axios.get(`/api/v1/quiz/get-quiz/${language}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const questionsData = res.data.data;
-        setQuestions(questionsData);
-        setTimer(questionsData.length * 60);
+        setAllQuestions(res.data.data || []);
       } catch (err) {
         console.error("Fetch Error", err);
         toast.error(`No quiz found for ${language}`);
@@ -34,6 +34,15 @@ const QuizLanguage = () => {
     };
     fetchQuestions();
   }, [language]);
+
+  useEffect(() => {
+    if (allQuestions.length > 0 && cardQuestions) {
+      const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, cardQuestions);
+      setQuestions(selected);
+      setTimer(cardTime * 60); 
+    }
+  }, [allQuestions, cardQuestions, cardTime]);
 
   useEffect(() => {
     if (!completed && questions.length > 0 && timer > 0) {
@@ -51,33 +60,33 @@ const QuizLanguage = () => {
     }
   }, [timer, completed, questions]);
 
-  const handleAnswer = (selected) => setSelectedOption(selected);
+  const handleAnswer = (selected) => {
+    setAnswers((prev) => ({ ...prev, [current]: selected }));
+  };
 
   const handleNext = () => {
-    if (selectedOption === questions[current].correctAnswer) {
-      setScore((prev) => prev + 1);
-    }
-    setSelectedOption(null);
-    if (current + 1 < questions.length) {
-      setCurrent(current + 1);
-    } else {
-      handleSubmit();
-    }
+    setCurrent((c) => {
+      const next = c + 1;
+      if (next < questions.length) {
+        return next;
+      } else {
+        handleSubmit();
+        return c;
+      }
+    });
   };
 
   const handlePrevious = () => {
-    if (current > 0) {
-      setCurrent(current - 1);
-      setSelectedOption(null);
-    }
+    if (current > 0) setCurrent((c) => c - 1);
   };
 
-
   const handleSubmit = async () => {
-    const finalScore =
-      score + (selectedOption === questions[current].correctAnswer ? 1 : 0);
-
+    const finalScore = questions.reduce(
+      (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
+      0
+    );
     setCompleted(true);
+
     try {
       const token = localStorage.getItem("token");
       await axios.post(
@@ -86,35 +95,41 @@ const QuizLanguage = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Quiz submitted!");
-
-      const completedQuizzes =
-        JSON.parse(localStorage.getItem("completedQuizzes")) || [];
-      if (!completedQuizzes.includes(language)) {
-        completedQuizzes.push(language);
-        localStorage.setItem(
-          "completedQuizzes",
-          JSON.stringify(completedQuizzes)
-        );
-      }
+       const completedQuizzes =
+         JSON.parse(localStorage.getItem("completedQuizzes")) || [];
+       if (!completedQuizzes.includes(language)) {
+         completedQuizzes.push(language);
+         localStorage.setItem(
+           "completedQuizzes",
+           JSON.stringify(completedQuizzes)
+         );
+       }
     } catch (err) {
-      toast.error("Failed to save result", err);
+      toast.error("Failed to save result");
+      console.error(err);
     }
   };
 
-
   if (completed) {
+    const finalScore = questions.reduce(
+      (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
+      0
+    );
     return (
       <div className="quiz-complete">
         <h2>Quiz Completed!</h2>
         <p>
-          You scored <strong>{score}</strong> out of{" "}
+          You scored <strong>{finalScore}</strong> out of{" "}
           <strong>{questions.length}</strong>
         </p>
+        <button 
+        onClick={() => navigate("/quiz")}>
+        Back to Quizzes</button>
         <button
           onClick={() =>
             navigate("/study_plane", {
               state: { generateLanguage: language },
-              replace: true, 
+              replace: true,
             })
           }
         >
@@ -140,11 +155,8 @@ const QuizLanguage = () => {
   const q = questions[current];
   const minutes = Math.floor(timer / 60);
   const seconds = timer % 60;
-
-  const cleanQuestion = q.question
-    .replace(/\n[a-zA-Z]*/g, "")
-    .replace(/\n/g, "");
-  const highlightedHTML = hljs.highlightAuto(cleanQuestion).value;
+  const highlightedHTML = hljs.highlightAuto(q.question).value;
+  const selectedOption = answers[current] || null;
 
   return (
     <div className="quiz-language-wrapper">
@@ -160,18 +172,6 @@ const QuizLanguage = () => {
           Q{current + 1}:{" "}
           <code dangerouslySetInnerHTML={{ __html: highlightedHTML }} />
         </pre>
-
-        {/* <div className="options-list">
-          {q.options.map((opt, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleAnswer(opt)}
-              className={selectedOption === opt ? "selected" : ""}
-            >
-              {opt}
-            </button>
-          ))}
-        </div> */}
 
         <div className="options-list">
           {q.options.map((opt, idx) => {
@@ -206,4 +206,3 @@ const QuizLanguage = () => {
 };
 
 export default QuizLanguage;
-

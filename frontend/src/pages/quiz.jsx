@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import {
   FaJava,
   FaPython,
@@ -11,101 +12,66 @@ import {
 } from "react-icons/fa";
 import { SiCplusplus, SiC, SiMysql } from "react-icons/si";
 import "../styles/quiz.css";
-const quizData = [
-  {
-      id: "Java",
-      name: "Java",
-      icon: <FaJava className="quiz-icon java" />,
-      questions: 30,
-      time: "45 mins",
-    },
-    {
-      id: "Python",
-      name: "Python",
-      icon: <FaPython className="quiz-icon python" />,
-      questions: 25,
-      time: "40 mins",
-    },
-    {
-      id: "Javascript",
-      name: "JavaScript",
-      icon: <FaJs className="quiz-icon js" />,
-      questions: 20,
-      time: "35 mins",
-    },
-    {
-      id: "SQL",
-      name: "SQL",
-      icon: <FaDatabase className="quiz-icon sql" />,
-      questions: 15,
-      time: "30 mins",
-    },
-    {
-      id: "HTML",
-      name: "HTML",
-      icon: <FaHtml5 className="quiz-icon html" />,
-      questions: 10,
-      time: "20 mins",
-    },
-    {
-      id: "React",
-      name: "React",
-      icon: <FaReact className="quiz-icon react" />,
-      questions: 18,
-      time: "30 mins",
-    },
-    {
-      id: "CSS",
-      name: "CSS",
-      icon: <FaCss3 className="quiz-icon css" />,
-      questions: 12,
-      time: "25 mins",
-    },
-    {
-      id: "Cpp",
-      name: "C++",
-      icon: <SiCplusplus className="quiz-icon cpp" />,
-      questions: 22,
-      time: "40 mins",
-    },
-    {
-      id: "C",
-      name: "C",
-      icon: <SiC className="quiz-icon c" />,
-      questions: 20,
-      time: "35 mins",
-    },
-    {
-      id: "MySQL",
-      name: "MySQL",
-      icon: <SiMysql className="quiz-icon mysql" />,
-      questions: 15,
-      time: "30 mins",
-    }
-];
 
+const iconMap = {
+  Java: <FaJava className="quiz-icon java" />,
+  Python: <FaPython className="quiz-icon python" />,
+  Javascript: <FaJs className="quiz-icon js" />,
+  SQL: <FaDatabase className="quiz-icon sql" />,
+  HTML: <FaHtml5 className="quiz-icon html" />,
+  React: <FaReact className="quiz-icon react" />,
+  CSS: <FaCss3 className="quiz-icon css" />,
+  Cpp: <SiCplusplus className="quiz-icon cpp" />,
+  C: <SiC className="quiz-icon c" />,
+  MySQL: <SiMysql className="quiz-icon mysql" />,
+};
 
 function Quiz() {
   const navigate = useNavigate();
+  const [quizData, setQuizData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleClick = (id) => {
-    navigate(`/quiz/${id}`);
+  const fetchQuizData = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/v1/user/get-quiz-cards", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setQuizData(res.data.data || []);
+    } catch (err) {
+      console.error("Error fetching quiz data:", err.response || err.message);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchQuizData();
+  }, []);
+
+  const handleClick = (card) => {
+    navigate(`/quiz/${card.language}`, {
+      state: { cardQuestions: card.questions, cardTime: card.time },
+    });
+  };
+
+  if (loading) return <p>Loading quizzes...</p>;
 
   return (
     <div className="quiz-page">
       <h2 className="quiz-title">Choose a Quiz</h2>
       <div className="quiz-card-container">
-        {quizData.map((quiz) => (
+        {quizData.map((card) => (
           <div
+            key={card.language}
             className="quiz-card"
-            key={quiz.id}
-            onClick={() => handleClick(quiz.id)}
+            onClick={() => handleClick(card)}
           >
-            {quiz.icon}
-            <h3>{quiz.name}</h3>
-            <p>Questions: {quiz.questions}</p>
-            <p>Time: {quiz.time}</p>
+            {iconMap[card.language] || <FaDatabase className="quiz-icon" />}
+            <h3>{card.language}</h3>
+            <p>Questions: {card.questions}</p>
+            <p>Time: {card.time} mins</p>
           </div>
         ))}
       </div>

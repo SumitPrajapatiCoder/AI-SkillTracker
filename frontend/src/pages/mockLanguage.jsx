@@ -1,18 +1,23 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "../styles/mockLanguage.css";
 import { toast } from "react-toastify";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
-
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 const MockLanguage = () => {
   const { language } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { cardQuestions, cardTime } = location.state || {};
+
+  const [allQuestions, setAllQuestions] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState({}); 
   const [score, setScore] = useState(0);
   const [timer, setTimer] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -22,10 +27,8 @@ const MockLanguage = () => {
   const [user, setUser] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
 
-  const navigate = useNavigate();
-  const q = questions[current] || null;
-
   const certificateRef = useRef();
+  const q = questions[current] || null;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -53,7 +56,6 @@ const MockLanguage = () => {
       const check = await axios.get(`/api/v1/user/mock-status/${language}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (check.data?.disable) {
         setMockDisabled(true);
         if (check.data.date) setCompletionDate(check.data.date);
@@ -70,28 +72,33 @@ const MockLanguage = () => {
   };
 
   useEffect(() => {
-    const fetchMockQuestions = async () => {
+    const fetchQuestions = async () => {
       try {
         const token = localStorage.getItem("token");
         const status = await getMockStatus();
-
         if (status.disable) return;
 
         const res = await axios.get(`/api/v1/quiz/get-mock/${language}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        const questionsData = res.data.data;
-        setQuestions(questionsData);
-        setTimer(questionsData.length * 60);
+        setAllQuestions(res.data.data || []);
       } catch (err) {
         console.error("Fetch Error", err);
         toast.error("Error loading mock test");
       }
     };
-
-    fetchMockQuestions();
+    fetchQuestions();
   }, [language]);
+
+
+  useEffect(() => {
+    if (allQuestions.length > 0 && cardQuestions) {
+      const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, cardQuestions);
+      setQuestions(selected);
+      setTimer(cardTime * 60);
+    }
+  }, [allQuestions, cardQuestions, cardTime]);
 
   useEffect(() => {
     if (!completed && questions.length > 0 && timer > 0) {
@@ -111,33 +118,28 @@ const MockLanguage = () => {
 
   const handleAnswer = (selected) => {
     setSelectedOption(selected);
+    setAnswers((prev) => ({ ...prev, [current]: selected }));
   };
 
+
   const handleNext = () => {
-    if (selectedOption === q?.correctAnswer) {
-      setScore((prev) => prev + 1);
-    }
     setSelectedOption(null);
-    if (current + 1 < questions.length) {
-      setCurrent((c) => c + 1);
-    } else {
-      handleSubmit();
-    }
+    if (current + 1 < questions.length) setCurrent((c) => c + 1);
+    else handleSubmit();
   };
 
   const handlePrevious = () => {
     if (current > 0) {
       setCurrent((c) => c - 1);
-      setSelectedOption(null);
+      setSelectedOption(answers[current - 1] || null);
     }
   };
 
   const handleSubmit = async () => {
-    let finalScore = score;
-    if (selectedOption === q?.correctAnswer) {
-      finalScore += 1;
-    }
-
+    const finalScore = questions.reduce(
+      (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
+      0
+    );
     setScore(finalScore);
     setCompleted(true);
 
@@ -152,7 +154,7 @@ const MockLanguage = () => {
       await getMockStatus();
     } catch (err) {
       toast.error("Failed to save mock result");
-      console.error("Save mock result error:", err);
+      console.error(err);
     }
   };
 
@@ -162,41 +164,32 @@ const MockLanguage = () => {
     return hljs.highlightAuto(cleanText).value;
   };
 
-const handleDownloadManual = async () => {
-  if (!certificateRef.current) {
-    toast.error("Certificate not found.");
-    return;
-  }
-  try {
-    setPdfLoading(true);
-    const element = certificateRef.current;
-    const canvas = await html2canvas(element, {
-      scale: 3,
-      useCORS: true,
-      backgroundColor: null,
-    });
-    const imgData = canvas.toDataURL("image/png");
+  const handleDownloadManual = async () => {
+    if (!certificateRef.current) return toast.error("Certificate not found.");
+    try {
+      setPdfLoading(true);
+      const canvas = await html2canvas(certificateRef.current, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: null,
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: [canvas.width, canvas.height],
+      });
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+      pdf.save(`${user?.name || "user"}-${language}-certificate.pdf`);
+      toast.success("Certificate downloaded successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download certificate.");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "pt",
-      format: [canvas.width, canvas.height],
-    });
-
-    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-
-    pdf.save(`${user?.name || "user"}-${language}-certificate.pdf`);
-
-    toast.success("Certificate downloaded successfully!");
-  } catch (err) {
-    console.error("Manual PDF download failed:", err);
-    toast.error("Failed to download certificate.");
-  } finally {
-    setPdfLoading(false);
-  }
-};
-
- 
   if (mockDisabled) {
     return (
       <div className="quiz-complete">
@@ -205,9 +198,7 @@ const handleDownloadManual = async () => {
           You’ve already scored full marks in the <strong>{language}</strong>{" "}
           mock test.
         </p>
-        <button onClick={() => navigate("/mock_test")}>
-          Go To Mack Page
-        </button>
+        <button onClick={() => navigate("/mock_test")}>Go To Mock Page</button>
 
         <div
           className="certificate"
@@ -262,9 +253,7 @@ const handleDownloadManual = async () => {
           You scored <strong>{score}</strong> out of{" "}
           <strong>{questions.length}</strong>
         </p>
-        <button onClick={() => navigate("/mock_test")}>
-          Go to Mock Text
-        </button>
+        <button onClick={() => navigate("/mock_test")}>Go to Mock Test</button>
       </div>
     );
   }
@@ -283,6 +272,7 @@ const handleDownloadManual = async () => {
         <div className="timer">
           ⏱ Time Left: {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
         </div>
+
         <pre>
           <strong>Q{current + 1}:</strong>{" "}
           <code
@@ -296,7 +286,6 @@ const handleDownloadManual = async () => {
           {q.options.map((opt, idx) => {
             const cleanedOpt = opt.replace(/\n[a-zA-Z]*/g, "").trim();
             const highlightedOpt = hljs.highlightAuto(cleanedOpt).value;
-
             return (
               <button
                 key={idx}

@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const userModel = require("../models/userModel");
+const quizCardModel = require("../models/quizCardModel");
+const mockCardModel = require("../models/mockCardModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -477,6 +479,44 @@ const getUserProgress = async (req, res) => {
 };
 
 
+ const getLanguages = async (req, res) => {
+  try {
+    const langs = await languageModel.find().sort({ name: 1 });
+    res.status(200).send({ success: true, data: langs });
+  } catch (error) {
+    console.error("Get Languages Error:", error);
+    res.status(500).send({ success: false, message: "Failed to fetch languages" });
+  }
+};
+
+
+const getQuizCardDetails = async (req, res) => {
+  try {
+    const quizCards = await quizCardModel.find().sort({ createdAt: -1 });
+    return res.status(200).json({ success: true, data: quizCards });
+  } catch (error) {
+    console.error("Get Quiz Cards Error:", error);
+    return res.status(500).json({
+      error: "Failed to fetch quiz cards",
+      details: error.message,
+    });
+  }
+};
+
+const getMockCardDetails = async (req, res) => {
+  try {
+    const mockCards = await mockCardModel.find().sort({ createdAt: -1 });
+    return res.status(200).json({ success: true, data: mockCards });
+  } catch (error) {
+    console.error("Get Mock Cards Error:", error);
+    return res.status(500).json({
+      error: "Failed to fetch mock cards",
+      details: error.message,
+    });
+  }
+};
+
+
 module.exports = { loginController, registerController, getUserInfo, updateProfileController, 
-    getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,
-    saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap };
+    getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,getLanguages,
+    saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,getMockCardDetails,getQuizCardDetails };

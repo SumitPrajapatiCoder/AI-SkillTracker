@@ -36,6 +36,10 @@
   margin-top: 2rem;
   perspective: 1000px; 
 }
+.features-grid a {
+  text-decoration: none;
+  color: inherit; 
+}
 
 .feature-card {
   background: rgba(255, 255, 255, 0.08);
@@ -51,6 +55,11 @@
 .feature-card:hover {
   transform: rotateY(12deg) rotateX(6deg) scale(1.05);
   background: rgba(255, 255, 255, 0.15);
+}
+
+.features-grid a:hover {
+  text-decoration: none;
+  color: inherit;
 }
 
 .feature-card h3 {

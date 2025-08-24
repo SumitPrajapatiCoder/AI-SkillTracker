@@ -170,7 +170,7 @@ const AdminUserList = () => {
             icon={record.isAdmin ? <UserDeleteOutlined /> : <UserAddOutlined />}
             onClick={() => handleAdminToggle(record._id)}
           >
-            {record.isAdmin ? "Demote" : "Promote"}
+            {record.isAdmin ? "User" : "Admin"}
           </Button>
 
           <Button

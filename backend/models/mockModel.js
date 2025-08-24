@@ -29,4 +29,5 @@ const mockSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
-module.exports = mongoose.model("mock", mockSchema);
+const quizModel = mongoose.model("mock", mockSchema);
+module.exports = quizModel;

@@ -1,8 +1,9 @@
 const quizModel = require("../models/quizModel");
 const mockModel = require("../models/mockModel");
 const userModel = require("../models/userModel");
-
-
+const languageModel = require("../models/languageModel");
+const quizCardModel = require("../models/quizCardModel");
+const mockCardModel = require("../models/mockCardModel");
 
 // const OpenAI = require("openai");
 // const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -227,6 +228,38 @@ Make sure:
 };
 
 
+ const uploadLanguage = async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).send({ success: false, message: "Language name required" });
+    }
+
+    const exists = await languageModel.findOne({ name });
+    if (exists) {
+      return res.status(400).send({ success: false, message: "Language already exists" });
+    }
+
+    const newLang = new languageModel({ name });
+    await newLang.save();
+
+    res.status(201).send({ success: true, message: "Language uploaded", data: newLang });
+  } catch (error) {
+    console.error("Upload Language Error:", error);
+    res.status(500).send({ success: false, message: "Failed to upload language" });
+  }
+};
+
+ const getLanguages = async (req, res) => {
+  try {
+    const langs = await languageModel.find().sort({ name: 1 });
+    res.status(200).send({ success: true, data: langs });
+  } catch (error) {
+    console.error("Get Languages Error:", error);
+    res.status(500).send({ success: false, message: "Failed to fetch languages" });
+  }
+};
 
 
 const uploadQuestion = async (req, res) => {
@@ -416,6 +449,122 @@ const toggleAdminRole = async (req, res) => {
   }
 };
 
+
+const addCardDetails = async (req, res) => {
+  try {
+    const { type, name, questions, time } = req.body;
+
+    if (!type || !["quiz", "mock"].includes(type)) {
+      return res.status(400).json({ error: "Invalid type. Must be 'quiz' or 'mock'" });
+    }
+
+    if (!name || name.trim() === "" || !questions || !time) {
+      return res.status(400).json({ error: "All fields are required and cannot be empty" });
+    }
+
+    const trimmedName = name.trim();
+
+    const Model = type === "quiz" ? quizCardModel : mockCardModel;
+
+    const newCard = new Model({
+      language: trimmedName,
+      questions,
+      time,
+      createdBy: req.userId,
+    });
+
+    await newCard.save();
+
+    return res.status(201).json({
+      success: true,
+      message: `${type} card added successfully`,
+      data: newCard,
+    });
+  } catch (error) {
+    console.error("Add Card Error:", error);
+    return res.status(500).json({
+      error: "Failed to add card",
+      details: error.message,
+    });
+  }
+};
+
+
+const getQuizCardDetails = async (req, res) => {
+  try {
+    const quizCards = await quizCardModel.find().sort({ createdAt: -1 });
+    return res.status(200).json({ success: true, data: quizCards });
+  } catch (error) {
+    console.error("Get Quiz Cards Error:", error);
+    return res.status(500).json({
+      error: "Failed to fetch quiz cards",
+      details: error.message,
+    });
+  }
+};
+
+const getMockCardDetails = async (req, res) => {
+  try {
+    const mockCards = await mockCardModel.find().sort({ createdAt: -1 });
+    return res.status(200).json({ success: true, data: mockCards });
+  } catch (error) {
+    console.error("Get Mock Cards Error:", error);
+    return res.status(500).json({
+      error: "Failed to fetch mock cards",
+      details: error.message,
+    });
+  }
+};
+
+const deleteCard = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.query;
+
+    if (type === "quiz") {
+      await quizCardModel.findByIdAndDelete(id);
+    } else if (type === "mock") {
+      await mockCardModel.findByIdAndDelete(id);
+    } else {
+      return res.status(400).json({ error: "Invalid card type" });
+    }
+
+    return res.status(200).json({ success: true, message: "Card deleted successfully" });
+  } catch (error) {
+    console.error("Delete Card Error:", error);
+    return res.status(500).json({
+      error: "Failed to delete card",
+      details: error.message,
+    });
+  }
+};
+
+// Update Card
+const updateCard = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.query;
+    const updateData = req.body;
+
+    let updatedCard;
+    if (type === "quiz") {
+      updatedCard = await quizCardModel.findByIdAndUpdate(id, updateData, { new: true });
+    } else if (type === "mock") {
+      updatedCard = await mockCardModel.findByIdAndUpdate(id, updateData, { new: true });
+    } else {
+      return res.status(400).json({ error: "Invalid card type" });
+    }
+
+    return res.status(200).json({ success: true, data: updatedCard });
+  } catch (error) {
+    console.error("Update Card Error:", error);
+    return res.status(500).json({
+      error: "Failed to update card",
+      details: error.message,
+    });
+  }
+};
+
 module.exports = {
     uploadQuestion,
     deleteQuestion,
@@ -423,5 +572,6 @@ module.exports = {
     listAllUsers,
     generateAIQuestion,
     editQuestion,
-    blockUser,unblockUser,deleteUser,toggleAdminRole
+    blockUser,unblockUser,deleteUser,toggleAdminRole,
+  uploadLanguage,getLanguages,addCardDetails,getQuizCardDetails,getMockCardDetails,deleteCard,updateCard
 };

@@ -82,6 +82,12 @@ const Header = () => {
                     >
                       All Questions
                     </Link>
+                    <Link to="/upload-card" onClick={() => setShowDropdown(false)}>
+                      Upload Card Details
+                    </Link>
+                    <Link to="/get-card" onClick={() => setShowDropdown(false)}>
+                      List Card Details
+                    </Link>
                     <Link to="/userList" onClick={() => setShowDropdown(false)}>
                       User List
                     </Link>
