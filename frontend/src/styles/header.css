@@ -39,6 +39,16 @@
   text-decoration: none;
 }
 
+.left a {
+  text-decoration: none;
+  color: inherit; 
+}
+
+
+.left a :hover{
+  text-decoration: none;
+  color: inherit; 
+}
 
 .brand-text {
   font-size: 1.8rem;

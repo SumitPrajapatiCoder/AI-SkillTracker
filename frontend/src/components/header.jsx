@@ -42,7 +42,10 @@ const Header = () => {
   return (
     <header className="navbar">
       <div className="left">
-        {user && <span className="username">{user.name}</span>}
+        <Link to="/home">
+          {" "}
+          {user && <span className="username">{user.name}</span>}
+        </Link>
       </div>
 
       <div className="center">
@@ -82,7 +85,10 @@ const Header = () => {
                     >
                       All Questions
                     </Link>
-                    <Link to="/upload-card" onClick={() => setShowDropdown(false)}>
+                    <Link
+                      to="/upload-card"
+                      onClick={() => setShowDropdown(false)}
+                    >
                       Upload Card Details
                     </Link>
                     <Link to="/get-card" onClick={() => setShowDropdown(false)}>
