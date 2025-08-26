@@ -4,7 +4,6 @@ import "../styles/profile.css";
 import { FaPen } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -15,6 +14,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { Table, Tag } from "antd"; 
 
 ChartJS.register(
   CategoryScale,
@@ -30,7 +30,6 @@ const Profile = () => {
   const [progress, setProgress] = useState({});
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "" });
-
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -99,6 +98,35 @@ const Profile = () => {
     ],
   };
 
+  const mockColumns = [
+    {
+      title: "Language",
+      dataIndex: "language",
+      key: "language",
+    },
+    {
+      title: "Completed",
+      dataIndex: "completed",
+      key: "completed",
+      render: (completed) =>
+        completed ? (
+          <Tag color="green" style={{ border: "1px solid green" }}>
+            Yes
+          </Tag>
+        ) : (
+          <Tag color="red" style={{ border: "1px solid red" }}>
+            No
+          </Tag>
+        ),
+    },
+    {
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "N/A"),
+    },
+  ];
+
   return (
     <div className="profile-page">
       <div className="profile-wrapper">
@@ -110,7 +138,6 @@ const Profile = () => {
               <div className="avatar">
                 {formData.name?.charAt(0).toUpperCase()}
               </div>
-
               {!editMode && (
                 <FaPen
                   className="edit-icon"
@@ -194,6 +221,25 @@ const Profile = () => {
           <Bar data={chartData} />
         </div>
       )}
+
+      <div className="big-stats-container">
+        {user?.completedMocks?.length > 0 && (
+          <div className="completed-mocks">
+            <h3>Completed Mock Tests</h3>
+            <Table
+              dataSource={user.completedMocks.map((m, index) => ({
+                key: index,
+                language: m.language,
+                completed: m.completed,
+                date: m.date,
+              }))}
+              columns={mockColumns}
+              pagination={false}
+              bordered
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

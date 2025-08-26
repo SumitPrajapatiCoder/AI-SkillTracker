@@ -56,7 +56,7 @@ const UploadCardDetails = () => {
 
   return (
     <div className="upload-card-wrapper">
-      <h2>Upload {formData.type === "quiz" ? "Quiz" : "Mock"} Details</h2>
+      <h2>Upload {formData.type === "quiz" ? "Quiz" : "Mock"} Card Details</h2>
 
       <form onSubmit={handleSubmit} className="upload-card-form">
         <select

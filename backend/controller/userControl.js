@@ -517,6 +517,18 @@ const getMockCardDetails = async (req, res) => {
 };
 
 
+const getCompletedMocks = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        res.json({ success: true, data: user.completedMocks });
+    } catch (error) {
+        console.error("getCompletedMocks error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
 module.exports = { loginController, registerController, getUserInfo, updateProfileController, 
-    getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,getLanguages,
+    getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,getLanguages,getCompletedMocks,
     saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,getMockCardDetails,getQuizCardDetails };

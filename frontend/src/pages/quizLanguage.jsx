@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -15,9 +15,11 @@ const QuizLanguage = () => {
   const [allQuestions, setAllQuestions] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState({}); 
+  const [answers, setAnswers] = useState({});
   const [completed, setCompleted] = useState(false);
   const [timer, setTimer] = useState(0);
+
+  const intervalRef = useRef(null);
 
   useEffect(() => {
     const fetchQuestions = async () => {
@@ -40,25 +42,63 @@ const QuizLanguage = () => {
       const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, cardQuestions);
       setQuestions(selected);
-      setTimer(cardTime * 60); 
+      setTimer(cardTime * 60);
     }
   }, [allQuestions, cardQuestions, cardTime]);
 
   useEffect(() => {
     if (!completed && questions.length > 0 && timer > 0) {
-      const interval = setInterval(() => {
+      intervalRef.current = setInterval(() => {
         setTimer((prev) => {
           if (prev <= 1) {
-            clearInterval(interval);
-            handleSubmit();
+            clearInterval(intervalRef.current);
+            setCompleted(true);
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
-      return () => clearInterval(interval);
+
+      return () => clearInterval(intervalRef.current);
     }
   }, [timer, completed, questions]);
+
+  useEffect(() => {
+    const submitQuiz = async () => {
+      if (!completed || questions.length === 0) return;
+
+      clearInterval(intervalRef.current);
+
+      const finalScore = questions.reduce(
+        (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
+        0
+      );
+
+      try {
+        const token = localStorage.getItem("token");
+        await axios.post(
+          "/api/v1/user/save-quiz-result",
+          { language, correct: finalScore, total: questions.length },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success("Quiz submitted!");
+        const completedQuizzes =
+          JSON.parse(localStorage.getItem("completedQuizzes")) || [];
+        if (!completedQuizzes.includes(language)) {
+          completedQuizzes.push(language);
+          localStorage.setItem(
+            "completedQuizzes",
+            JSON.stringify(completedQuizzes)
+          );
+        }
+      } catch (err) {
+        toast.error("Failed to save result");
+        console.error(err);
+      }
+    };
+
+    submitQuiz();
+  }, [completed, questions, answers, language]);
 
   const handleAnswer = (selected) => {
     setAnswers((prev) => ({ ...prev, [current]: selected }));
@@ -70,7 +110,7 @@ const QuizLanguage = () => {
       if (next < questions.length) {
         return next;
       } else {
-        handleSubmit();
+        setCompleted(true);
         return c;
       }
     });
@@ -78,36 +118,6 @@ const QuizLanguage = () => {
 
   const handlePrevious = () => {
     if (current > 0) setCurrent((c) => c - 1);
-  };
-
-  const handleSubmit = async () => {
-    const finalScore = questions.reduce(
-      (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
-      0
-    );
-    setCompleted(true);
-
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        "/api/v1/user/save-quiz-result",
-        { language, correct: finalScore, total: questions.length },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success("Quiz submitted!");
-       const completedQuizzes =
-         JSON.parse(localStorage.getItem("completedQuizzes")) || [];
-       if (!completedQuizzes.includes(language)) {
-         completedQuizzes.push(language);
-         localStorage.setItem(
-           "completedQuizzes",
-           JSON.stringify(completedQuizzes)
-         );
-       }
-    } catch (err) {
-      toast.error("Failed to save result");
-      console.error(err);
-    }
   };
 
   if (completed) {
@@ -122,9 +132,7 @@ const QuizLanguage = () => {
           You scored <strong>{finalScore}</strong> out of{" "}
           <strong>{questions.length}</strong>
         </p>
-        <button 
-        onClick={() => navigate("/quiz")}>
-        Back to Quizzes</button>
+        <button onClick={() => navigate("/quiz")}>Back to Quizzes</button>
         <button
           onClick={() =>
             navigate("/study_plane", {
@@ -135,7 +143,6 @@ const QuizLanguage = () => {
         >
           Go to Study Plan
         </button>
-
         <button
           onClick={() =>
             navigate("/roadmap", {
@@ -164,9 +171,11 @@ const QuizLanguage = () => {
         <div className="quit">
           <button onClick={() => navigate("/quiz")}>Quit</button>
         </div>
-        <div className="timer">
-          ⏱ Time Left: {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
-        </div>
+        {!completed && (
+          <div className="timer">
+            ⏱ Time Left: {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+          </div>
+        )}
 
         <pre>
           Q{current + 1}:{" "}
@@ -206,3 +215,6 @@ const QuizLanguage = () => {
 };
 
 export default QuizLanguage;
+
+
+
