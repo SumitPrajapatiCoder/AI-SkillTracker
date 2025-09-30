@@ -1,7 +1,7 @@
 const express = require("express");
 const { loginController, registerController,getUserInfo,generateRoadMap,getStudyPlans,saveStudyPlan,
     getRoadmaps, saveRoadmap, getLanguages, getMockCardDetails, getQuizCardDetails,getCompletedMocks,
-updateProfileController,saveMockResult,getMockStatus,saveQuizResult,generateStudyPlan,
+updateProfileController,saveMockResult,getMockStatus,saveQuizResult,generateStudyPlan,chatbotController,
 getUserProgress} = require("../controller/userControl");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -35,5 +35,6 @@ router.get("/get-quiz-cards", authMiddleware,getQuizCardDetails);
 router.get("/get-mock-cards", authMiddleware,getMockCardDetails);
 
 router.get("/completed-mocks", authMiddleware, getCompletedMocks);
+router.post("/chatbot", authMiddleware, chatbotController);
 
 module.exports = router;

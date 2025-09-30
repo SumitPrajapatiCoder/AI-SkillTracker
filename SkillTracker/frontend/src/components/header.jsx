@@ -120,6 +120,9 @@ const Header = () => {
             <Link to="/study_plane" onClick={() => setShowDropdown(false)}>
               Study Plan
             </Link>
+            <Link to="/chatbot_page" onClick={() => setShowDropdown(false)}>
+              Chatbot
+            </Link>
             {user && (
               <button className="logout-button" onClick={handleLogout}>
                 Logout

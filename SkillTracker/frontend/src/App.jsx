@@ -19,6 +19,7 @@ import UserList from "./pages/admin/userList";
 import AllQuestion from "./pages/admin/questionList";
 import UploadCardDetails from "./pages/admin/uploadCardDetails";
 import ListCardDetails from "./pages/admin/listCardDetails";
+import Chatbot from "./pages/chatbot";
 import "react-toastify/dist/ReactToastify.css";
 
 
@@ -27,6 +28,16 @@ function App() {
     <BrowserRouter>
       <ToastContainer position="top-right" autoClose={3000} />
       <Routes>
+        <Route
+          path="/chatbot_page"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Chatbot />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/upload-card"
           element={

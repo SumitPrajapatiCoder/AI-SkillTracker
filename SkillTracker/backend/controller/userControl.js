@@ -287,9 +287,7 @@ Your task:
 Goal: Produce an actionable, motivating, and confidence-building **study planner** that guides the learner step by step in improving their ${lang} skills.
 `;
 
-
-
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
             const result = await model.generateContent([prompt]);
             return result.response.text();
         }
@@ -440,7 +438,7 @@ Your task:
 Goal: The output should be an **amazing, motivating, structured roadmap** that makes the user feel capable, confident, and excited to learn ${lang}.
 `;
 
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
             const result = await model.generateContent([prompt]);
             return result.response.text();
         }
@@ -590,6 +588,52 @@ const getCompletedMocks = async (req, res) => {
     }
 };
 
-module.exports = { loginController, registerController, getUserInfo, updateProfileController, 
+
+
+const chatbotController = async (req, res) => {
+    try {
+        const { messages } = req.body;
+        if (!messages || !Array.isArray(messages) || messages.length === 0) {
+            return res.status(400).json({ success: false, message: "Messages are required" });
+        }
+
+        const userMessage = messages[messages.length - 1].text || messages[messages.length - 1].parts?.[0]?.text;
+
+        const formattedPrompt = `
+You are a professional assistant. Answer the following question in a friendly, readable, and engaging way, like ChatGPT would. 
+- Use **bold** for important terms
+- Use short paragraphs for clarity
+- Use bullet points or numbered lists
+- Avoid markdown headings like ### 
+- Make it conversational and professional
+- Keep it suitable for direct chat display (do not use raw markdown)
+    
+Question: ${userMessage}
+`;
+
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+        const result = await model.generateContent([{ text: formattedPrompt }]);
+        const botResponse = result?.response?.text() || "No response from AI.";
+
+        return res.status(200).json({
+            success: true,
+            response: botResponse,
+            timestamp: new Date().toISOString(),
+        });
+
+    } catch (error) {
+        console.error("Chatbot Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to get response from AI",
+            error: error.message,
+        });
+    }
+};
+
+
+
+module.exports = {
+    loginController, registerController, getUserInfo, updateProfileController, chatbotController, 
     getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,getLanguages,getCompletedMocks,
     saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,getMockCardDetails,getQuizCardDetails };

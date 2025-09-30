@@ -1,0 +1,185 @@
+.chatbot-container {
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  max-width: 700px;
+  margin: auto;
+  border-radius: 12px;
+  padding: 10px;
+  background: linear-gradient(135deg, #e0eafc, #cfdef3);
+  transition: 0.4s ease;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.chatbot-container.dark-mode {
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  color: #f0f0f0;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #b2c8de;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.chatbot-container.dark-mode .chat-header {
+  background: #3b3b5a;
+}
+
+.btn-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  font-size: 1.2rem;
+}
+
+.chat-window {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 12px;
+  position: relative;
+}
+
+.chatbot-container.dark-mode .chat-window {
+  background: rgba(30, 30, 30, 0.85);
+}
+
+.chat-bubble {
+  max-width: 75%;
+  padding: 14px 18px;
+  border-radius: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  animation: fadeInUp 0.3s ease both;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.3s;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.chat-bubble:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.chat-bubble.from-user {
+  align-self: flex-end;
+  background: #d0f0fd;
+  text-align: right;
+  color: #000;
+}
+
+.chat-bubble.from-bot {
+  align-self: flex-start;
+  background: #ffffff;
+  text-align: left;
+  color: #000;
+}
+
+.chatbot-container.dark-mode .chat-bubble.from-user {
+  background: #007bff;
+  color: #fff;
+}
+
+.chatbot-container.dark-mode .chat-bubble.from-bot {
+  background: #2e2e2e;
+  color: #fff;
+}
+
+.volume-icon {
+  font-size: 1.3rem;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.chat-bubble.from-bot.active-sound .volume-icon {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: #00aaff;
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.chat-bubble.from-user.active-sound .volume-icon {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  color: #ff7f50;
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.chatbot-container.dark-mode .chat-bubble.from-user.active-sound .volume-icon {
+  color: #ffd700;
+}
+
+.bubble-content {
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.bubble-content b {
+  font-weight: 600;
+}
+
+.bubble-content i {
+  font-style: italic;
+}
+
+.bubble-content ul,
+.bubble-content ol {
+  margin: 6px 0 6px 20px;
+}
+
+.input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 10px;
+}
+
+.input-row input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background: #f0f0f0;
+}
+
+.input-row button {
+  width: 50px;
+  height: 42px;
+  border: none;
+  border-radius: 8px;
+  background: #0078ff;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.input-row button:hover {
+  background: #005fcc;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
