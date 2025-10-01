@@ -77,7 +77,8 @@ const AdminQuestionList = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setQuestions((prev) => prev.filter((q) => q._id !== id));
-      toast.success("Deleted successfully!");
+      toast.success(" Question deleted successfully!");
+      MySwal.fire("Deleted!", "Question has been deleted.", "success");
     } catch (err) {
       console.error(err);
       toast.error("Delete failed");

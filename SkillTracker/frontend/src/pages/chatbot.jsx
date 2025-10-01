@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPaperPlane, faVolumeHigh, faToggleOn, faToggleOff } from "@fortawesome/free-solid-svg-icons";
+import { faPaperPlane, faVolumeHigh, faToggleOn, faToggleOff, faTrash } from "@fortawesome/free-solid-svg-icons";
 import hljs from "highlight.js";
-import "highlight.js/styles/atom-one-dark.css"; 
+import "highlight.js/styles/github-dark.css";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import "../styles/chatbot.css";
+
+const MySwal = withReactContent(Swal);
 
 function Chatbot() {
   const [messages, setMessages] = useState([]);
@@ -25,7 +31,6 @@ function Chatbot() {
           { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
         const data = res.data.data;
-
         if (typeof data === "string") {
           setUser({ username: data });
         } else {
@@ -40,9 +45,25 @@ function Chatbot() {
         setUser({ username: "User" });
       }
     };
+
+    const fetchHistory = async () => {
+      try {
+        const res = await axios.get("/api/v1/user/chat-history", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (res.data.success) {
+          setMessages(res.data.chatHistory);
+        }
+      } catch (err) {
+        console.error("Error fetching chat history:", err.message);
+      }
+    };
+
     fetchUser();
+    fetchHistory();
   }, []);
 
+  
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -86,9 +107,40 @@ function Chatbot() {
     }
   };
 
+  
+  const handleClearChat = async () => {
+    const result = await MySwal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to clear all messages?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, clear it!",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await axios.delete("/api/v1/user/clear-chat-history", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (res.data.success) {
+        setMessages([]);
+        toast.success("Chat deleted successfully!");
+        MySwal.fire("Cleared!", "Your chat history has been removed.", "success");
+      }
+    } catch (err) {
+      toast.error("Error clearing chat: " + (err.response?.data?.message || err.message));
+      console.error("Error clearing chat:", err.message);
+    }
+  };
+
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter") handleSend();
   };
+
 
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
@@ -126,7 +178,6 @@ function Chatbot() {
     document.querySelectorAll("pre code").forEach((block) => {
       hljs.highlightElement(block);
     });
-
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -143,6 +194,9 @@ function Chatbot() {
           <button onClick={toggleDarkMode} className="btn-toggle">
             {darkMode ? <FontAwesomeIcon icon={faToggleOn} /> : <FontAwesomeIcon icon={faToggleOff} />}
           </button>
+          <button onClick={handleClearChat} className="btn-clear">
+            <FontAwesomeIcon icon={faTrash} /> Clear Chat
+          </button>
         </div>
       </div>
 
@@ -157,8 +211,7 @@ function Chatbot() {
             <div
               className="bubble-content"
               dangerouslySetInnerHTML={{
-                __html: msg.text
-                  .replace(/```([\s\S]*?)```/g, (match, p1) => `<pre><code>${p1}</code></pre>`),
+                __html: msg.text.replace(/```([\s\S]*?)```/g, (match, p1) => `<pre><code>${p1}</code></pre>`),
               }}
             />
             {activeSoundIdx === idx && (

@@ -70,6 +70,7 @@ const ListCardDetails = () => {
       });
       setCards((prev) => prev.filter((c) => c._id !== id));
       toast.success("Card deleted successfully!");
+      MySwal.fire("Deleted!", "Card has been deleted.", "success");
     } catch (err) {
       console.error(err);
       toast.error("Delete failed");

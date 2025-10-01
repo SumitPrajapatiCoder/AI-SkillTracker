@@ -11,7 +11,6 @@ body {
   margin: 0;
 }
 
-/* --- List Card Container --- */
 .list-card-container {
   max-width: 900px;
   margin: 50px auto;
@@ -32,7 +31,6 @@ body {
   margin-bottom: 30px;
 }
 
-/* Filter bar */
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -52,6 +50,7 @@ body {
   backdrop-filter: var(--blur);
   transition: 0.3s ease;
   flex: 1 1 200px;
+  min-width: 120px;
 }
 
 .filter-bar select:focus,
@@ -75,7 +74,6 @@ body {
   transform: translateY(-2px);
 }
 
-/* Card Grid */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -111,35 +109,125 @@ body {
   font-size: 0.95rem;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.card-actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.card-actions .delete-btn {
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.2s, filter 0.2s;
 }
+
+.card-actions .delete-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.edit-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.edit-buttons .save-btn {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.edit-buttons .cancel-btn {
+  background: #888;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
 
 @media (max-width: 768px) {
   .list-card-container {
     padding: 25px;
+    margin: 30px 15px;
   }
 
-  .filter-bar {
+  .list-card-container h2 {
+    font-size: 1.6rem;
+  }
+
+  .filter-bar select,
+  .filter-bar input,
+  .filter-bar button {
+    flex: 1 1 100%;
+    font-size: 0.95rem;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+  }
+
+  .card h3 {
+    font-size: 1.1rem;
+  }
+
+  .card p {
+    font-size: 0.9rem;
+  }
+
+  .card-actions {
     flex-direction: column;
-    align-items: stretch;
+  }
+
+  .edit-buttons {
+    flex-direction: column;
   }
 }
+
+@media (max-width: 480px) {
+  .list-card-container {
+    padding: 15px;
+    margin: 20px 10px;
+  }
+
+  .list-card-container h2 {
+    font-size: 1.4rem;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .card h3 {
+    font-size: 1rem;
+  }
+
+  .card p {
+    font-size: 0.85rem;
+  }
+
+  .filter-bar select,
+  .filter-bar input,
+  .filter-bar button {
+    font-size: 0.9rem;
+  }
+
+  .card-actions .delete-btn,
+  .edit-buttons .save-btn,
+  .edit-buttons .cancel-btn {
+    width: 100%;
+  }
+}
+

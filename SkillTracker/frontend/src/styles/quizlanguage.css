@@ -15,7 +15,6 @@
   color: #333;
 }
 
-
 .options-list button {
   display: block;
   width: 100%;
@@ -47,7 +46,6 @@
   border-left: 4px solid #28a745;
 }
 
-
 .timer {
   font-size: 1rem;
   font-weight: bold;
@@ -60,6 +58,8 @@
 .navigation-buttons {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .navigation-buttons button {
@@ -71,6 +71,7 @@
   font-weight: bold;
   cursor: pointer;
   transition: background 0.3s ease;
+  flex: 1 1 45%;
 }
 
 .navigation-buttons button:hover {
@@ -81,7 +82,6 @@
   text-align: center;
   padding: 3rem;
 }
-
 
 .review-section {
   display: flex;
@@ -120,17 +120,111 @@
 }
 
 .review-option {
-  padding: 8px 12px;
-  border-radius: 6px;
+  position: relative; 
+  padding: 12px 16px;
+  border-radius: 8px;
   border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.review-option.correct {
-  background-color: #d4edda;
-  border: 1px solid #28a745;
+.review-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.review-option.wrong {
-  background-color: #f8d7da;
-  border: 1px solid #dc3545;
+.option-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 12px;
+  color: #fff;
+}
+
+.correct-badge {
+  background-color: #28a745;
+}
+
+.wrong-badge {
+  background-color: #dc3545;
+}
+
+.option-radio {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+.option-radio.selected {
+  border-color: #4caf50;
+  background-color: #e8f5e9;
+}
+
+.option-radio input {
+  margin-right: 10px;
+  margin-top: 5px;
+}
+
+
+@media (max-width: 768px) {
+  .quiz-language-wrapper {
+    margin: 30px 15px;
+    padding: 1.5rem;
+  }
+
+  .question-box h3 {
+    font-size: 1rem;
+  }
+
+  .navigation-buttons button {
+    flex: 1 1 100%;
+  }
+
+  .timer {
+    top: 15px;
+    right: 20px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .quiz-language-wrapper {
+    padding: 1rem;
+  }
+
+  .question-box h3 {
+    font-size: 0.95rem;
+  }
+
+  .options-list button {
+    font-size: 0.9rem;
+  }
+
+  .option-code {
+    padding: 8px;
+  }
+
+  .review-question-header {
+    font-size: 1rem;
+  }
+
+  .review-question-text {
+    padding: 10px;
+  }
+
+  .option-radio {
+    font-size: 0.9rem;
+  }
+
+  .navigation-buttons button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
 }

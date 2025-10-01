@@ -1,4 +1,3 @@
-
 :root {
   --primary-color: #4e8cff;
   --gradient: linear-gradient(135deg, #4e8cff, #6f53ff);
@@ -11,6 +10,7 @@
 body {
   background: linear-gradient(to right, #e0eafc, #cfdef3);
   font-family: "Poppins", sans-serif;
+  margin: 0;
 }
 
 .admin-form {
@@ -33,7 +33,7 @@ body {
   margin-bottom: 30px;
 }
 
-.admin-form .filter-bar {
+.filter-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
@@ -51,6 +51,7 @@ body {
   backdrop-filter: var(--blur);
   transition: 0.3s ease;
   flex: 1 1 200px;
+  min-width: 120px;
 }
 
 .admin-form input:focus,
@@ -83,69 +84,29 @@ body {
 }
 
 .question-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: var(--blur);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
-  border-left: 5px solid var(--primary-color);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
-  animation: fadeInUp 0.5s ease forwards;
-}
-
-.question-card strong {
-  color: #333;
-}
-
-.question-card ul {
-  padding-left: 1.2rem;
-  margin-top: 6px;
-}
-
-.question-card li {
-  list-style: disc;
-  color: #444;
-}
-
-.delete-button {
-  background: var(--danger);
-  color: white;
-  padding: 8px 16px;
-  margin-top: 12px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: 0.3s ease;
-}
-
-.delete-button:hover {
-  background: #c0392b;
-  transform: scale(1.02);
-}
-
-
-.code-block {
-  background-color: #f9f9f9;
-  padding: 12px;
-  border-radius: 8px;
-  font-family: "Courier New", monospace;
-  white-space: pre-wrap;
-  overflow-x: auto;
-  border: 1px solid #ccc;
-  margin: 10px 0;
-}
-
-.question-card {
   background-color: #fff;
   padding: 20px;
   border-radius: 12px;
   margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+  animation: fadeInUp 0.5s ease forwards;
 }
 
 .question-card ul {
   padding-left: 20px;
   list-style-type: disc;
+}
+
+.code-block {
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+  font-family: "Courier New", monospace;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  border: 1px solid #ccc;
+  margin: 8px 0;
 }
 
 .options-grid {
@@ -178,6 +139,45 @@ body {
   color: #333;
 }
 
+.delete-button {
+  background: var(--danger);
+  color: white;
+  padding: 8px 16px;
+  margin-top: 12px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.delete-button:hover {
+  background: #c0392b;
+  transform: scale(1.02);
+}
+
+.edit-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.edit-buttons .save-btn {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.edit-buttons .cancel-btn {
+  background: #888;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
 
 
 @keyframes fadeIn {
@@ -205,96 +205,58 @@ body {
 @media (max-width: 768px) {
   .admin-form {
     padding: 25px;
+    margin: 30px 15px;
   }
 
   .filter-bar {
     flex-direction: column;
     align-items: stretch;
   }
+
+  .question-card {
+    padding: 16px;
+  }
+
+  .code-block {
+    font-size: 0.85rem;
+  }
+
+  .option-item {
+    font-size: 0.9rem;
+    padding: 8px 10px;
+  }
+
+  .edit-buttons {
+    flex-direction: column;
+  }
 }
 
+@media (max-width: 480px) {
+  .admin-form {
+    padding: 15px;
+    margin: 20px 10px;
+  }
 
-.swal2-popup {
-  max-width: 700px !important;
-}
+  .admin-form h2 {
+    font-size: 1.5rem;
+  }
 
-.swal2-input, .swal2-textarea {
-  margin: 0 !important;
-  width: 100% !important;
-  font-size: 0.95rem;
-}
+  .question-card {
+    padding: 12px;
+  }
 
-.swal2-textarea {
-  resize: vertical !important;
-}
+  .code-block {
+    font-size: 0.8rem;
+  }
 
+  .option-item {
+    font-size: 0.85rem;
+    padding: 6px 8px;
+  }
 
-.swal2-popup {
-  max-width: 700px !important;
-  padding: 20px !important;
-  font-family: "Segoe UI", sans-serif;
-  background: #1e1e2f; 
-  color: #f0f0f0;
-  border-radius: 12px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-}
-
-.swal2-title {
-  font-size: 1.4rem !important;
-  font-weight: bold !important;
-  color: #00c3ff !important;
-  margin-bottom: 15px !important;
-}
-
-.swal2-input,
-.swal2-textarea {
-  background: #2a2a3d !important;
-  color: #fff !important;
-  border: 1px solid #555 !important;
-  border-radius: 6px !important;
-  padding: 8px 10px !important;
-  font-size: 0.95rem !important;
-  box-shadow: none !important;
-}
-
-.swal2-input:focus,
-.swal2-textarea:focus {
-  border-color: #00c3ff !important;
-  outline: none !important;
-  box-shadow: 0 0 0 2px rgba(0,195,255,0.3) !important;
-}
-
-#swal-question {
-  min-height: 100px !important;
-  font-family: "Courier New", monospace !important;
-  font-size: 0.9rem !important;
-  white-space: pre-wrap;
-}
-
-#swal-options {
-  min-height: 80px !important;
-}
-
-.swal2-confirm {
-  background-color: #00c3ff !important;
-  color: #fff !important;
-  border-radius: 6px !important;
-  padding: 8px 20px !important;
-  font-size: 0.95rem !important;
-}
-
-.swal2-cancel {
-  background-color: #ff4d4f !important;
-  color: #fff !important;
-  border-radius: 6px !important;
-  padding: 8px 20px !important;
-  font-size: 0.95rem !important;
-}
-
-.swal2-cancel:hover {
-  background-color: #d9363e !important;
-}
-
-.swal2-confirm:hover {
-  background-color: #0095cc !important;
+  .edit-buttons .save-btn,
+  .edit-buttons .cancel-btn,
+  .delete-button {
+    width: 100%;
+  }
 }

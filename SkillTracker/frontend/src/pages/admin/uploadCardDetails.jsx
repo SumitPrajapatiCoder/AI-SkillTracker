@@ -41,7 +41,7 @@ const UploadCardDetails = () => {
       await axios.post("/api/v1/admin/add-card", formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Card details uploaded successfully!");
+      toast.success("Card uploaded successfully!");
       setFormData({
         type: "quiz",
         name: "",

@@ -589,31 +589,59 @@ const getCompletedMocks = async (req, res) => {
 };
 
 
-
 const chatbotController = async (req, res) => {
     try {
+        const userId = req.user.id;
         const { messages } = req.body;
+
         if (!messages || !Array.isArray(messages) || messages.length === 0) {
             return res.status(400).json({ success: false, message: "Messages are required" });
         }
 
-        const userMessage = messages[messages.length - 1].text || messages[messages.length - 1].parts?.[0]?.text;
+        const userMessage = messages[messages.length - 1].text
+            || messages[messages.length - 1].parts?.[0]?.text;
+
+        const user = await userModel.findById(userId).select("chatHistory");
+        const history = user?.chatHistory || [];
+
+        const recentHistory = history.slice(-20);
+
+        let conversationContext = "";
+        recentHistory.forEach(msg => {
+            const speaker = msg.role === "user" ? "User" : "Gemini";
+            conversationContext += `${speaker}: ${msg.text}\n`;
+        });
 
         const formattedPrompt = `
-You are a professional assistant. Answer the following question in a friendly, readable, and engaging way, like ChatGPT would. 
+You are a professional assistant. 
+This is the conversation so far:
+${conversationContext}
+
+Now the user says: "${userMessage}"
+
+Respond in a friendly, readable, and engaging way, like ChatGPT would. 
 - Use **bold** for important terms
 - Use short paragraphs for clarity
 - Use bullet points or numbered lists
-- Avoid markdown headings like ### 
+- Avoid markdown headings like ###
 - Make it conversational and professional
-- Keep it suitable for direct chat display (do not use raw markdown)
-    
-Question: ${userMessage}
+- Keep it suitable for direct chat display (no raw markdown)
 `;
 
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
         const result = await model.generateContent([{ text: formattedPrompt }]);
         const botResponse = result?.response?.text() || "No response from AI.";
+
+        await userModel.findByIdAndUpdate(userId, {
+            $push: {
+                chatHistory: {
+                    $each: [
+                        { role: "user", text: userMessage, time: new Date() },
+                        { role: "bot", text: botResponse, time: new Date() },
+                    ]
+                }
+            }
+        });
 
         return res.status(200).json({
             success: true,
@@ -631,9 +659,40 @@ Question: ${userMessage}
     }
 };
 
+const getChatHistory = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await userModel.findById(userId).select("chatHistory");
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        return res.status(200).json({ success: true, chatHistory: user.chatHistory });
+    } catch (error) {
+        console.error("GetChatHistory Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch chat history",
+            error: error.message,
+        });
+    }
+};
 
+const clearChatHistory = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        await userModel.findByIdAndUpdate(userId, { $set: { chatHistory: [] } });
+        return res.status(200).json({ success: true, message: "Chat history cleared" });
+    } catch (error) {
+        console.error("ClearChatHistory Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to clear chat history",
+            error: error.message,
+        });
+    }
+};
 
 module.exports = {
-    loginController, registerController, getUserInfo, updateProfileController, chatbotController, 
+    loginController, registerController, getUserInfo, updateProfileController, chatbotController, getChatHistory,clearChatHistory,
     getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,getLanguages,getCompletedMocks,
     saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,getMockCardDetails,getQuizCardDetails };

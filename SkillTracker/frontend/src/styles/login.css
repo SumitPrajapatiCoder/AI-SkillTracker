@@ -110,7 +110,6 @@ a:hover {
   }
 }
 
-/* Responsive Design */
 @media (max-width: 480px) {
   .login-form,
   .register-form {

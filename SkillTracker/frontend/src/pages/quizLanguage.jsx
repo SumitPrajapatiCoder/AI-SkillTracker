@@ -120,7 +120,7 @@ const QuizLanguage = () => {
     if (current > 0) setCurrent((c) => c - 1);
   };
 
-  
+
   if (completed) {
     const finalScore = questions.reduce(
       (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
@@ -156,18 +156,23 @@ const QuizLanguage = () => {
                     const isSelected = answers[idx] === opt;
 
                     return (
+
                       <div
                         key={i}
                         className={`review-option 
-                  ${isCorrect ? "correct" : ""} 
-                  ${isSelected && !isCorrect ? "wrong" : ""}`}
+    ${isCorrect ? "correct" : ""} 
+    ${isSelected && !isCorrect ? "wrong" : ""}`}
                       >
                         <pre>
-                          <code
-                            dangerouslySetInnerHTML={{ __html: highlightedOpt }}
-                          />
+                          <code dangerouslySetInnerHTML={{ __html: highlightedOpt }} />
                         </pre>
+                        {isCorrect || isSelected ? (
+                          <span className={`option-badge ${isCorrect ? "correct-badge" : "wrong-badge"}`}>
+                            {isCorrect ? "Correct" : "Wrong"}
+                          </span>
+                        ) : null}
                       </div>
+
                     );
                   })}
                 </div>
@@ -229,19 +234,25 @@ const QuizLanguage = () => {
 
         <div className="options-list">
           {q.options.map((opt, idx) => {
-            const cleanedOpt = opt.replace(/\n[a-zA-Z]*/g, "").trim();
-            const highlightedOpt = hljs.highlightAuto(cleanedOpt).value;
+            const highlightedOpt = hljs.highlightAuto(opt).value;
+            const isSelected = selectedOption === opt;
 
             return (
-              <button
+              <label
                 key={idx}
-                onClick={() => handleAnswer(opt)}
-                className={selectedOption === opt ? "selected" : ""}
+                className={`option-radio ${isSelected ? "selected" : ""}`}
               >
+                <input
+                  type="radio"
+                  name={`question-${current}`}
+                  value={opt}
+                  checked={isSelected}
+                  onChange={() => handleAnswer(opt)}
+                />
                 <pre className="option-code">
                   <code dangerouslySetInnerHTML={{ __html: highlightedOpt }} />
                 </pre>
-              </button>
+              </label>
             );
           })}
         </div>

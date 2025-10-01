@@ -93,6 +93,7 @@ const AdminUserList = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("User deleted successfully!");
+      MySwal.fire("Deleted!", "User has been deleted.", "success");
       fetchUsers();
     } catch (err) {
       console.error(err);
@@ -161,6 +162,7 @@ const AdminUserList = () => {
             type={record.isBlocked ? "default" : "primary"}
             icon={record.isBlocked ? <CheckOutlined /> : <StopOutlined />}
             onClick={() => handleBlockToggle(record._id, record.isBlocked)}
+            disabled={record.isAdmin} 
           >
             {record.isBlocked ? "Unblock" : "Block"}
           </Button>
@@ -177,13 +179,14 @@ const AdminUserList = () => {
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record._id)}
-            disabled={record.isAdmin}
+            disabled={record.isAdmin} 
           >
             Delete
           </Button>
         </Space>
       ),
-    },
+    }
+
   ];
 
   return (
@@ -207,11 +210,13 @@ const AdminUserList = () => {
         loading={loading}
         pagination={{
           pageSize: 8,
-          position: ["bottomCenter"], 
+          position: ["bottomCenter"],
         }}
         bordered
         className="user-table"
+        scroll={{ x: "max-content" }}
       />
+
     </div>
   );
 

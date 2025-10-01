@@ -18,11 +18,13 @@ const Home = () => {
         <div className="features-grid">
           <Link to="/profile">
             <div className="feature-card">
-              <h3>Profile</h3>
+              <h3>Profile & Skill Growth</h3>
               <p>
-                View your learning journey in one place. Track quizzes, mock
-                tests, certificates, and AI-generated study plans.
-              </p>
+                Create your personal profile to track your skill development over
+                time. View your quiz history, scores, and earned certificates all
+                in one place.
+                
+               </p>
             </div>
           </Link>
 
@@ -68,13 +70,12 @@ const Home = () => {
             </div>
           </Link>
 
-          <Link to="/profile">
+          <Link to="/chatbot_page">
             <div className="feature-card">
-              <h3>Skill Growth & Progress</h3>
+              <h3>Chat Bot</h3>
               <p>
-                All your activity — quizzes, study plans, mock tests, and
-                certificates — helps you <strong>consistently grow</strong> your
-                skills.
+                Get instant answers to your questions, personalized study tips,
+                and guidance throughout your learning journey.
               </p>
             </div>
           </Link>

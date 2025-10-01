@@ -52,6 +52,14 @@ const userSchema = new mongoose.Schema({
         of: String,
         default: {},
     },
+    chatHistory: [
+        {
+            role: { type: String, enum: ["user", "bot"], required: true },
+            text: { type: String, required: true },
+            time: { type: Date, default: Date.now },
+        },
+    ],
+
 }, { timestamps: true });
 
 const userModel = mongoose.model("user", userSchema);
