@@ -204,18 +204,26 @@ pre:hover {
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
-.option-code {
-  margin: 0;
-  padding: 10px;
-  background: #1e1e1e;
-  border-radius: 8px;
-  overflow-x: auto;
+.option-radio {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  cursor: pointer;
 }
 
-.options-list button.selected .option-code {
-  background: #2a3d2f;
-  border-left: 4px solid #28a745;
+.option-radio.selected {
+  border-color: #4caf50;
+  background-color: #e8f5e9;
 }
+
+.option-radio input {
+  margin-right: 10px;
+  margin-top: 5px;
+}
+
 
 
 @keyframes fadeIn {
@@ -228,3 +236,4 @@ pre:hover {
     transform: translateY(0);
   }
 }
+

@@ -1,30 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import {
-  FaJava,
-  FaPython,
-  FaJs,
-  FaDatabase,
-  FaHtml5,
-  FaReact,
-  FaCss3,
-} from "react-icons/fa";
-import { SiCplusplus, SiC, SiMysql } from "react-icons/si";
 import "../styles/mock_test.css";
-
-const iconMap = {
-  Java: <FaJava className="mock-icon java" />,
-  Python: <FaPython className="mock-icon python" />,
-  Javascript: <FaJs className="mock-icon js" />,
-  SQL: <FaDatabase className="mock-icon sql" />,
-  HTML: <FaHtml5 className="mock-icon html" />,
-  React: <FaReact className="mock-icon react" />,
-  CSS: <FaCss3 className="mock-icon css" />,
-  Cpp: <SiCplusplus className="mock-icon cpp" />,
-  C: <SiC className="mock-icon c" />,
-  MySQL: <SiMysql className="mock-icon mysql" />,
-};
 
 const MockTest = () => {
   const navigate = useNavigate();
@@ -68,7 +45,6 @@ const MockTest = () => {
             className="mocktest-card"
             onClick={() => handleClick(test)}
           >
-            {iconMap[test.language] || <FaDatabase className="mock-icon" />}
             <h3>{test.language}</h3>
             <p>Questions: {test.questions}</p>
             <p>Time: {test.time} mins</p>

@@ -335,22 +335,29 @@ const handleDownloadManual = async () => {
         </pre>
 
         <div className="options-list">
-          {q.options.map((opt, idx) => {
-            const cleanedOpt = opt.replace(/\n[a-zA-Z]*/g, "").trim();
-            const highlightedOpt = hljs.highlightAuto(cleanedOpt).value;
-            return (
-              <button
-                key={idx}
-                onClick={() => handleAnswer(opt)}
-                className={selectedOption === opt ? "selected" : ""}
-              >
-                <pre className="option-code">
-                  <code dangerouslySetInnerHTML={{ __html: highlightedOpt }} />
-                </pre>
-              </button>
-            );
-          })}
-        </div>
+  {q.options.map((opt, idx) => {
+    const cleanedOpt = opt.replace(/\n[a-zA-Z]*/g, "").trim();
+    const highlightedOpt = hljs.highlightAuto(cleanedOpt).value;
+    return (
+      <label
+        key={idx}
+        className={`option-label ${selectedOption === opt ? "selected" : ""}`}
+      >
+        <input
+          type="radio"
+          name={`question-${current}`}
+          value={opt}
+          checked={selectedOption === opt}
+          onChange={() => handleAnswer(opt)}
+        />
+        <pre className="option-code">
+          <code dangerouslySetInnerHTML={{ __html: highlightedOpt }} />
+        </pre>
+      </label>
+    );
+  })}
+</div>
+
 
         <div className="navigation-buttons">
           <button onClick={handlePrevious} disabled={current === 0}>

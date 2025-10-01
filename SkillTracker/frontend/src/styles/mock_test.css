@@ -1,90 +1,140 @@
+
 .mocktest-page {
   padding: 2rem;
-  background: linear-gradient(to bottom right, #dfe9f3, #ffffff);
+  background: linear-gradient(135deg, #cfd9df, #e2ebf0);
   min-height: 100vh;
   font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .mocktest-title {
   text-align: center;
   font-size: 2.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   color: #1e293b;
+  background: linear-gradient(90deg, #4f46e5, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: slideDown 0.7s ease forwards;
 }
 
 .mocktest-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.8rem;
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 1rem;
 }
 
 .mocktest-card {
-  background-color: #f1f5f9;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(145deg, #4f46e5, #3b82f6);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  color: white;
   text-align: center;
   cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.mocktest-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 70%);
+  transform: rotate(45deg);
+  opacity: 0;
+  transition: all 0.5s ease;
+}
+
+.mocktest-card:hover::before {
+  opacity: 1;
+  transform: rotate(0deg);
 }
 
 .mocktest-card:hover {
-  transform: translateY(-6px);
-  background-color: #e2e8f0;
-}
-
-.mock-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.mock-icon.java {
-  color: #e76f00;
-}
-
-.mock-icon.python {
-  color: #ffda44;
-}
-
-.mock-icon.js {
-  color: #f7df1e;
-}
-
-.mock-icon.sql {
-  color: #2b6cb0;
-}
-
-.mock-icon.html {
-  color: #f16529;
-}
-
-.mock-icon.react {
-  color: #61dafb;
-}
-
-.mock-icon.css {
-  color: #2965f1;
-}
-
-.mock-icon.cpp {
-  color: #00599c;
-}
-
-.mock-icon.c {
-  color: #97bce2;
-}
-.mock-icon.mysql {
-  color: #00758f;
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.25);
 }
 
 .mocktest-card h3 {
-  font-size: 1.4rem;
-  margin-bottom: 0.5rem;
-  color: #0f172a;
+  font-size: 1.6rem;
+  margin-bottom: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .mocktest-card p {
-  font-size: 1rem;
+  font-size: 1.05rem;
   margin: 0.25rem 0;
-  color: #334155;
+}
+
+.loading-text {
+  font-size: 1.2rem;
+  color: #64748b;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1024px) {
+  .mocktest-card {
+    padding: 1.8rem 1.2rem;
+  }
+
+  .mocktest-card h3 {
+    font-size: 1.4rem;
+  }
+
+  .mocktest-card p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .mocktest-title {
+    font-size: 2rem;
+  }
+
+  .mocktest-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .mocktest-card h3 {
+    font-size: 1.3rem;
+  }
+
+  .mocktest-card p {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mocktest-title {
+    font-size: 1.7rem;
+  }
+
+  .mocktest-card {
+    padding: 1.2rem 0.8rem;
+  }
+
+  .mocktest-card h3 {
+    font-size: 1.2rem;
+  }
+
+  .mocktest-card p {
+    font-size: 0.9rem;
+  }
 }
