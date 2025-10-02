@@ -38,7 +38,7 @@ function Quiz() {
 
   return (
     <div className="quiz-page">
-      <h2 className="quiz-title">Choose a Quiz</h2>
+      <h2 className="quiz-title">Choose A Quiz</h2>
       <div className="quiz-card-container">
         {quizData.map((card) => (
           <div

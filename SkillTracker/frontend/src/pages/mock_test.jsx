@@ -37,7 +37,7 @@ const MockTest = () => {
 
   return (
     <div className="mocktest-page">
-      <h2 className="mocktest-title">Mock Tests</h2>
+      <h2 className="mocktest-title"> Choose A Mock Tests</h2>
       <div className="mocktest-cards">
         {mockData.map((test) => (
           <div
