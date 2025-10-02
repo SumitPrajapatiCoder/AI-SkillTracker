@@ -1,5 +1,6 @@
 const dotenv = require("dotenv");
-dotenv.config();  
+// dotenv.config();  
+
 const express = require("express");
 const colors = require("colors");
 const morgan = require("morgan");
@@ -7,6 +8,7 @@ const connect_DB = require("./config/db");
 const cors = require("cors");
 const path = require("path");
 
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 connect_DB();
 const app = express();
@@ -43,6 +45,6 @@ if (process.env.NODE_ENV === "production") {
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
-    console.log(`Server Running In ${process.env.NODE_MODE} Mode on Port ${port}`.bgCyan.white);
+    console.log(`Server Running In ${process.env.NODE_ENV} Mode on Port ${port}`.bgCyan.white);
 });
 
