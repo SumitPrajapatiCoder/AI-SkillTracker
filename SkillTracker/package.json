@@ -33,9 +33,9 @@
     "concurrently": "^9.2.1"
   },
 "scripts": {
-  "start": "node backend/server.js",
   "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
-  "build": "echo 'Nothing to build. Frontend already prebuilt.'"
+  "build": "npm install --prefix frontend && npm run build --prefix frontend && npm install --prefix backend",
+  "start": "npm run build && node backend/server.js"
 },
 
   "keywords": [],
