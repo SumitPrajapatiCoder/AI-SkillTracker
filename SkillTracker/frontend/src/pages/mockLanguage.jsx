@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import "../styles/mockLanguage.css";
+import "../styles/mocklanguage.css";
 import { toast } from "react-toastify";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
