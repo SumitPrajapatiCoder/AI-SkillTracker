@@ -82,6 +82,7 @@ const UploadCardDetails = () => {
 
         <input
           type="number"
+          min="1"
           placeholder="No. of Questions"
           value={formData.questions}
           onChange={(e) =>
@@ -92,6 +93,7 @@ const UploadCardDetails = () => {
 
         <input
           type="number"
+          min="1"
           placeholder="Time (in minutes)"
           value={formData.time}
           onChange={(e) =>

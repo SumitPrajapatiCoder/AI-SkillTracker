@@ -164,81 +164,81 @@ const MockLanguage = () => {
 
 
 
-const handleDownloadManual = async () => {
-  if (!certificateRef.current) return toast.error("Certificate not found.");
-  try {
-    setPdfLoading(true);
-    const node = certificateRef.current;
+  const handleDownloadManual = async () => {
+    if (!certificateRef.current) return toast.error("Certificate not found.");
+    try {
+      setPdfLoading(true);
+      const node = certificateRef.current;
 
-    if (document.fonts && document.fonts.ready) await document.fonts.ready;
-    const imgs = Array.from(node.querySelectorAll("img"));
-    await Promise.all(
-      imgs.map((img) =>
-        img.complete ? Promise.resolve() : new Promise((r) => (img.onload = r))
-      )
-    );
+      if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      const imgs = Array.from(node.querySelectorAll("img"));
+      await Promise.all(
+        imgs.map((img) =>
+          img.complete ? Promise.resolve() : new Promise((r) => (img.onload = r))
+        )
+      );
 
-    const orig = {
-      width: node.style.width,
-      height: node.style.height,
-      overflow: node.style.overflow,
-      animation: node.style.animation,
-      boxSizing: node.style.boxSizing,
-    };
+      const orig = {
+        width: node.style.width,
+        height: node.style.height,
+        overflow: node.style.overflow,
+        animation: node.style.animation,
+        boxSizing: node.style.boxSizing,
+      };
 
-    const fullW = Math.ceil(node.scrollWidth);
-    const fullH = Math.ceil(node.scrollHeight);
-    node.style.width = `${fullW}px`;
-    node.style.height = `${fullH}px`;
-    node.style.overflow = "visible";
-    node.style.animation = "none";
-    node.style.boxSizing = "border-box";
+      const fullW = Math.ceil(node.scrollWidth);
+      const fullH = Math.ceil(node.scrollHeight);
+      node.style.width = `${fullW}px`;
+      node.style.height = `${fullH}px`;
+      node.style.overflow = "visible";
+      node.style.animation = "none";
+      node.style.boxSizing = "border-box";
 
-    await new Promise((r) => setTimeout(r, 50));
+      await new Promise((r) => setTimeout(r, 50));
 
-    const scale = Math.min(2, window.devicePixelRatio || 1.5);
-    const canvas = await html2canvas(node, {
-      scale,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      width: fullW,
-      height: fullH,
-      windowWidth: document.documentElement.clientWidth,
-      windowHeight: document.documentElement.clientHeight,
-    });
+      const scale = Math.min(2, window.devicePixelRatio || 1.5);
+      const canvas = await html2canvas(node, {
+        scale,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        width: fullW,
+        height: fullH,
+        windowWidth: document.documentElement.clientWidth,
+        windowHeight: document.documentElement.clientHeight,
+      });
 
-    node.style.width = orig.width;
-    node.style.height = orig.height;
-    node.style.overflow = orig.overflow;
-    node.style.animation = orig.animation;
-    node.style.boxSizing = orig.boxSizing;
+      node.style.width = orig.width;
+      node.style.height = orig.height;
+      node.style.overflow = orig.overflow;
+      node.style.animation = orig.animation;
+      node.style.boxSizing = orig.boxSizing;
 
-    const dataUrl = canvas.toDataURL("image/png", 1);
+      const dataUrl = canvas.toDataURL("image/png", 1);
 
-    const pdf = new jsPDF({
-      orientation: "landscape",
-      unit: "px",
-      format: "a4",
-    });
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "px",
+        format: "a4",
+      });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
 
-    const ratio = Math.min(pageW / fullW, pageH / fullH);
-    const imgW = fullW * ratio;
-    const imgH = fullH * ratio;
-    const x = (pageW - imgW) / 2;
-    const y = (pageH - imgH) / 2;
+      const ratio = Math.min(pageW / fullW, pageH / fullH);
+      const imgW = fullW * ratio;
+      const imgH = fullH * ratio;
+      const x = (pageW - imgW) / 2;
+      const y = (pageH - imgH) / 2;
 
-    pdf.addImage(dataUrl, "PNG", x, y, imgW, imgH);
-    pdf.save(`${user?.name || "user"}-${language}-certificate.pdf`);
-    toast.success("Certificate downloaded successfully!");
-  } catch (err) {
-    console.error("download error:", err);
-    toast.error("Failed to download certificate.");
-  } finally {
-    setPdfLoading(false);
-  }
-};
+      pdf.addImage(dataUrl, "PNG", x, y, imgW, imgH);
+      pdf.save(`${user?.name || "user"}-${language}-certificate.pdf`);
+      toast.success("Certificate downloaded successfully!");
+    } catch (err) {
+      console.error("download error:", err);
+      toast.error("Failed to download certificate.");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
 
 
@@ -335,28 +335,28 @@ const handleDownloadManual = async () => {
         </pre>
 
         <div className="options-list">
-  {q.options.map((opt, idx) => {
-    const cleanedOpt = opt.replace(/\n[a-zA-Z]*/g, "").trim();
-    const highlightedOpt = hljs.highlightAuto(cleanedOpt).value;
-    return (
-      <label
-        key={idx}
-        className={`option-label ${selectedOption === opt ? "selected" : ""}`}
-      >
-        <input
-          type="radio"
-          name={`question-${current}`}
-          value={opt}
-          checked={selectedOption === opt}
-          onChange={() => handleAnswer(opt)}
-        />
-        <pre className="option-code">
-          <code dangerouslySetInnerHTML={{ __html: highlightedOpt }} />
-        </pre>
-      </label>
-    );
-  })}
-</div>
+          {q.options.map((opt, idx) => {
+            const cleanedOpt = opt.replace(/\n[a-zA-Z]*/g, "").trim();
+            const highlightedOpt = hljs.highlightAuto(cleanedOpt).value;
+            return (
+              <label
+                key={idx}
+                className={`option-label ${selectedOption === opt ? "selected" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name={`question-${current}`}
+                  value={opt}
+                  checked={selectedOption === opt}
+                  onChange={() => handleAnswer(opt)}
+                />
+                <pre className="option-code">
+                  <code dangerouslySetInnerHTML={{ __html: highlightedOpt }} />
+                </pre>
+              </label>
+            );
+          })}
+        </div>
 
 
         <div className="navigation-buttons">

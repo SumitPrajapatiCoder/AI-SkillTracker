@@ -14,20 +14,14 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Table, Tag } from "antd"; 
+import { Table, Tag } from "antd";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [progress, setProgress] = useState({});
+  const [mockList, setMockList] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "" });
 
@@ -37,11 +31,7 @@ const Profile = () => {
         const res = await axios.post(
           "/api/v1/user/get_User_data",
           {},
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
         setUser(res.data.data);
         setFormData({ name: res.data.data.name, email: res.data.data.email });
@@ -59,7 +49,7 @@ const Profile = () => {
         const res = await axios.get("/api/v1/user/progress", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
-        setProgress(res.data.data);
+        setProgress(res.data.data || {});
       } catch (error) {
         console.error("Error fetching progress:", error.message);
         toast.error("Failed to load progress");
@@ -67,6 +57,33 @@ const Profile = () => {
     };
     fetchProgress();
   }, []);
+
+  useEffect(() => {
+    const fetchMockList = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("/api/v1/user/get-mock-cards", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const mocks = res.data.data.map((m) => {
+          const completedMock = user?.completedMocks?.find(
+            (cm) => cm.language === m.language
+          );
+          return {
+            language: m.language,
+            completed: completedMock ? true : false,
+            date: completedMock?.date || "",
+          };
+        });
+        setMockList(mocks);
+      } catch (error) {
+        console.error("Error fetching mock tests:", error.message);
+        toast.error("Failed to load mock tests");
+        setMockList([]);
+      }
+    };
+    if (user) fetchMockList();
+  }, [user]);
 
   const handleUpdate = async () => {
     try {
@@ -99,32 +116,23 @@ const Profile = () => {
   };
 
   const mockColumns = [
-    {
-      title: "Language",
-      dataIndex: "language",
-      key: "language",
-    },
+    { title: "Language", dataIndex: "language", key: "language" },
     {
       title: "Completed",
       dataIndex: "completed",
       key: "completed",
       render: (completed) =>
         completed ? (
-          <Tag color="green" style={{ border: "1px solid green" }}>
-            Yes
-          </Tag>
+          <Tag color="green" style={{ border: "1px solid green" }}>Yes</Tag>
         ) : (
-          <Tag color="red" style={{ border: "1px solid red" }}>
-            No
-          </Tag>
+          <Tag color="red" style={{ border: "1px solid red" }}>No</Tag>
         ),
     },
     {
       title: "Date",
       dataIndex: "date",
       key: "date",
-      render: (date) =>
-        date ? new Date(date).toLocaleDateString("en-GB") : "N/A",
+      render: (date) => (date ? new Date(date).toLocaleDateString("en-GB") : "No Completed Date Found"),
     },
   ];
 
@@ -136,15 +144,8 @@ const Profile = () => {
 
           {user ? (
             <div className="profile-card">
-              <div className="avatar">
-                {formData.name?.charAt(0).toUpperCase()}
-              </div>
-              {!editMode && (
-                <FaPen
-                  className="edit-icon"
-                  onClick={() => setEditMode(true)}
-                />
-              )}
+              <div className="avatar">{formData.name?.charAt(0).toUpperCase()}</div>
+              {!editMode && <FaPen className="edit-icon" onClick={() => setEditMode(true)} />}
               {editMode ? (
                 <>
                   <div className="input-group">
@@ -152,9 +153,7 @@ const Profile = () => {
                     <input
                       type="text"
                       value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="profile-input"
                     />
                   </div>
@@ -163,50 +162,29 @@ const Profile = () => {
                     <input
                       type="email"
                       value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="profile-input"
                     />
                   </div>
                   <div className="edit-buttons">
-                    <button className="save-btn" onClick={handleUpdate}>
-                      Save
-                    </button>
-                    <button
-                      className="cancel-btn"
-                      onClick={() => setEditMode(false)}
-                    >
-                      Cancel
-                    </button>
+                    <button className="save-btn" onClick={handleUpdate}>Save</button>
+                    <button className="cancel-btn" onClick={() => setEditMode(false)}>Cancel</button>
                   </div>
                 </>
               ) : (
                 <>
+                  <p><strong>Profile ID:</strong> {user._id}</p>
+                  <p><strong>Name:</strong> {user.name}</p>
+                  <p><strong>Email:</strong> {user.email}</p>
                   <p>
-                    <strong>Profile ID:</strong> {user._id}
-                  </p>
-                  <p>
-                    <strong>Name:</strong> {user.name}
-                  </p>
-                  <p>
-                    <strong>Email:</strong> {user.email}
-                  </p>
-                  <p>
-                    <strong>Created At:</strong>{" "}
-                    {new Date(user.createdAt).toLocaleDateString()}{" "}
+                    <strong>Created At:</strong> {new Date(user.createdAt).toLocaleDateString()}{" "}
                     {new Date(user.createdAt).toLocaleTimeString()}
                   </p>
                   <p>
-                    <strong>Last Updated:</strong>{" "}
-                    {new Date(user.updatedAt).toLocaleDateString()}{" "}
+                    <strong>Last Updated:</strong> {new Date(user.updatedAt).toLocaleDateString()}{" "}
                     {new Date(user.updatedAt).toLocaleTimeString()}
                   </p>
-                  {user.isAdmin && (
-                    <p>
-                      <strong>Role:</strong> Admin
-                    </p>
-                  )}
+                  {user.isAdmin && <p><strong>Role:</strong> Admin</p>}
                 </>
               )}
             </div>
@@ -216,29 +194,26 @@ const Profile = () => {
         </div>
       </div>
 
-      {Object.keys(progress).length > 0 && (
-        <div className="big-stats-container">
-          <h3>Quiz Progress by Language</h3>
+      <div className="big-stats-container">
+        <h3>Quiz Progress by Language</h3>
+        {Object.keys(progress).length > 0 ? (
           <Bar data={chartData} />
-        </div>
-      )}
+        ) : (
+          <p className="no-data">No quiz progress found yet.</p>
+        )}
+      </div>
 
       <div className="big-stats-container">
-        {user?.completedMocks?.length > 0 && (
-          <div className="completed-mocks">
-            <h3>Completed Mock Tests</h3>
-            <Table
-              dataSource={user.completedMocks.map((m, index) => ({
-                key: index,
-                language: m.language,
-                completed: m.completed,
-                date: m.date,
-              }))}
-              columns={mockColumns}
-              pagination={false}
-              bordered
-            />
-          </div>
+        <h3>Mock Tests</h3>
+        {mockList.length > 0 ? (
+          <Table
+            dataSource={mockList.map((m, index) => ({ key: index, ...m }))}
+            columns={mockColumns}
+            pagination={false}
+            bordered
+          />
+        ) : (
+          <p className="no-data">No mock tests available.</p>
         )}
       </div>
     </div>

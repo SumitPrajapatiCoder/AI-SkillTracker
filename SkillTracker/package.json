@@ -33,10 +33,7 @@
     "concurrently": "^9.2.1"
   },
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
-    "install": "npm install --prefix frontend && npm install --prefix backend",
-    "build": "npm run build --prefix frontend",
-    "start": "node backend/server.js"
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
   },
   
   "keywords": [],

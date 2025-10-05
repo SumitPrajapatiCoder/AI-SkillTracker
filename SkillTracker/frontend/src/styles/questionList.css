@@ -2,8 +2,8 @@
   --primary-color: #4e8cff;
   --gradient: linear-gradient(135deg, #4e8cff, #6f53ff);
   --bg-glass: rgba(255, 255, 255, 0.75);
-  --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --blur: blur(10px);
+  --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  --blur: blur(8px);
   --danger: #e74c3c;
 }
 
@@ -15,10 +15,10 @@ body {
 
 .admin-form {
   max-width: 900px;
-  margin: 50px auto;
-  padding: 40px;
+  margin: 40px auto;
+  padding: 25px 30px;
   background: var(--bg-glass);
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: var(--box-shadow);
   backdrop-filter: var(--blur);
   animation: fadeIn 0.6s ease-in-out;
@@ -26,31 +26,31 @@ body {
 
 .admin-form h2 {
   text-align: center;
-  font-size: 2rem;
+  font-size: 1.8rem;
   background: var(--gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 .filter-bar {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
   justify-content: center;
 }
 
 .admin-form select,
 .admin-form input {
-  padding: 12px 14px;
-  font-size: 1rem;
-  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  border-radius: 10px;
   border: 1px solid #ccc;
   background: rgba(255, 255, 255, 0.5);
   backdrop-filter: var(--blur);
   transition: 0.3s ease;
-  flex: 1 1 200px;
+  flex: 1 1 180px;
   min-width: 120px;
 }
 
@@ -58,13 +58,13 @@ body {
 .admin-form select:focus {
   border-color: var(--primary-color);
   outline: none;
-  box-shadow: 0 0 8px rgba(78, 140, 255, 0.2);
+  box-shadow: 0 0 6px rgba(78, 140, 255, 0.2);
 }
 
 .admin-form button {
-  padding: 12px 18px;
-  font-size: 1rem;
-  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  border-radius: 10px;
   border: none;
   background: var(--gradient);
   color: white;
@@ -75,7 +75,7 @@ body {
 
 .admin-form button:hover {
   filter: brightness(1.05);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .question-list {
@@ -85,44 +85,41 @@ body {
 
 .question-card {
   background-color: #fff;
-  padding: 20px;
+  padding: 12px;
   border-radius: 12px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   position: relative;
   animation: fadeInUp 0.5s ease forwards;
 }
 
-.question-card ul {
-  padding-left: 20px;
-  list-style-type: disc;
-}
-
 .code-block {
   background-color: #f9f9f9;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 6px;
+  border-radius: 6px;
   font-family: "Courier New", monospace;
   white-space: pre-wrap;
   overflow-x: auto;
   border: 1px solid #ccc;
-  margin: 8px 0;
+  margin: 6px 0;
+  font-size: 0.85rem;
 }
 
 .options-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
-  margin-top: 6px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-top: 4px;
+  margin-bottom: 8px;
 }
 
 .option-item {
   background-color: #f4f4f4;
-  padding: 10px 14px;
-  border-radius: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
   border: 1px solid #ccc;
   font-family: "Segoe UI", sans-serif;
+  font-size: 0.85rem;
   transition: all 0.3s ease;
 }
 
@@ -142,10 +139,10 @@ body {
 .delete-button {
   background: var(--danger);
   color: white;
-  padding: 8px 16px;
-  margin-top: 12px;
+  padding: 6px 12px;
+  margin-top: 8px;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   transition: 0.3s ease;
 }
@@ -157,15 +154,15 @@ body {
 
 .edit-buttons {
   display: flex;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 6px;
+  margin-top: 6px;
 }
 
 .edit-buttons .save-btn {
   background: var(--primary-color);
   color: #fff;
   border: none;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 8px;
   cursor: pointer;
 }
@@ -174,11 +171,10 @@ body {
   background: #888;
   color: #fff;
   border: none;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 8px;
   cursor: pointer;
 }
-
 
 @keyframes fadeIn {
   from {
@@ -194,7 +190,7 @@ body {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(40px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -204,8 +200,8 @@ body {
 
 @media (max-width: 768px) {
   .admin-form {
-    padding: 25px;
-    margin: 30px 15px;
+    padding: 20px;
+    margin: 25px 12px;
   }
 
   .filter-bar {
@@ -214,16 +210,16 @@ body {
   }
 
   .question-card {
-    padding: 16px;
+    padding: 10px;
   }
 
   .code-block {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   .option-item {
-    font-size: 0.9rem;
-    padding: 8px 10px;
+    font-size: 0.8rem;
+    padding: 5px 6px;
   }
 
   .edit-buttons {
@@ -233,25 +229,25 @@ body {
 
 @media (max-width: 480px) {
   .admin-form {
-    padding: 15px;
-    margin: 20px 10px;
+    padding: 12px;
+    margin: 15px 8px;
   }
 
   .admin-form h2 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
 
   .question-card {
-    padding: 12px;
+    padding: 8px;
   }
 
   .code-block {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .option-item {
-    font-size: 0.85rem;
-    padding: 6px 8px;
+    font-size: 0.75rem;
+    padding: 4px 6px;
   }
 
   .edit-buttons .save-btn,

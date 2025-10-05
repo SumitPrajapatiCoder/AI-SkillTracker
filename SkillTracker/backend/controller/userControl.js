@@ -126,21 +126,35 @@ const updateProfileController = async (req, res) => {
 };
 
 
-
 const saveQuizResult = async (req, res) => {
     try {
-        const { language, correct, total } = req.body;
+        const { language, correct, total, playedQuestions } = req.body;
 
         const user = await userModel.findById(req.userId);
-        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        if (!user)
+            return res
+                .status(404)
+                .json({ success: false, message: "User not found" });
 
-        user.quizHistory.push({ language, correct, total });
+        user.quizHistory.push({
+            language,
+            correct,
+            total,
+            playedQuestions, 
+        });
+
         await user.save();
+        await addNotification(user._id, `Quiz completed for ${language}. You scored ${correct}/${total}.`);
 
-        res.status(200).json({ success: true, message: "Quiz result saved" });
+
+        res
+            .status(200)
+            .json({ success: true, message: "Quiz result saved with details" });
     } catch (error) {
         console.error("Save Result Error:", error);
-        res.status(500).json({ success: false, message: "Failed to save quiz result" });
+        res
+            .status(500)
+            .json({ success: false, message: "Failed to save quiz result" });
     }
 };
 
@@ -173,6 +187,12 @@ const saveMockResult = async (req, res) => {
         }
 
         await user.save();
+        await addNotification(user._id, `Mock Test for ${language} completed. You scored ${correct}/${total}.`);
+
+        if (Number(correct) === Number(total)) {
+            await addNotification(user._id, `Congratulations! You achieved a perfect score in ${language} mock test. Certificate unlocked!`);
+        }
+
         res.status(200).json({ success: true, message: "Mock result saved" });
     } catch (error) {
         console.error("Save Mock Result Error:", error);
@@ -207,7 +227,7 @@ const generateStudyPlan = async (req, res) => {
         const { language } = req.query;
 
         const user = await userModel.findById(userId).select("quizHistory studyPlans");
-        
+
         if (!user) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
@@ -221,70 +241,40 @@ const generateStudyPlan = async (req, res) => {
             acc[q.language].push(q);
             return acc;
         }, {});
-
         async function generatePlanForLanguage(lang, quizzes) {
             const historySummary = quizzes
-                .map(q => {
-                    const percent = ((q.correct / q.total) * 100).toFixed(1);
-                    return `- Scored ${q.correct}/${q.total} (${percent}%) on ${new Date(q.date).toLocaleDateString()}`;
+                .map((q, idx) => {
+                    const answersSummary = (q.playedQuestions || [])
+                        .map((pq, i) => {
+                            const questionText = pq.question ? pq.question.replace(/\n/g, " ") : "No question text";
+                            const selected = pq.selectedAnswer || "No answer selected";
+                            const correct = pq.correctAnswer || "No correct answer";
+                            return `   • Q${i + 1}: "${questionText}" | User Selected Answer: "${selected}" | Correct Answer: "${correct}"`;
+                        })
+                        .join("\n");
+
+                    return `• Quiz ${idx + 1} taken on ${new Date(q.date).toLocaleDateString()}:\n${answersSummary}`;
                 })
                 .join("\n");
 
-            const avgPercent =
-                quizzes.reduce((acc, q) => acc + (q.correct / q.total) * 100, 0) / quizzes.length;
 
             const prompt = `
-You are an expert programming tutor and mentor who creates **personalized, confidence-building study planners** based on quiz performance.
+You are an expert programming tutor and mentor. Based on the following user's **quiz history in ${lang}**, create a **deep, personalized study plan**. 
 
-The learner has taken quizzes in ${lang}. Here is their quiz history:
-
+**User Quiz History:**
 ${historySummary}
 
-Their average score in ${lang} is ${avgPercent.toFixed(1)}%.
+**Instructions:**
+- Analyze the user's answers to identify **patterns, weaknesses, and strengths**.
+- Suggest **topics to focus on** and **mistakes to avoid**.
+- Provide **actionable learning steps**, **mini-projects**, and **hands-on exercises** based on actual quiz questions.
+- Recommend **resources** (books, websites, videos, coding platforms) for each topic.
+- Include a **daily and weekly study routine**.
+- Use **bullet points, numbered lists, and headings** for clarity and readability.
+- Focus on **practical learning**, avoid percentages or generic labels like beginner/intermediate.
+- Output should feel like a **personal mentor has analyzed the quizzes and given a plan**.
 
-Your task:
-
-1. **Analyze their scores and learning patterns** to identify:
-   - Strengths to build on
-   - Weaknesses that need extra attention
-   - Any repeated mistakes or patterns in performance
-
-2. **Generate a different study planner depending on the score range**:
-   - **0–39% (Beginner):** Focus on absolute fundamentals (syntax, variables, loops). Include confidence-building exercises, simple examples, and beginner-friendly resources. Build strong habits like 15–30 mins of coding daily.
-   - **40–59% (Lower Intermediate):** Focus on intermediate problem areas (functions, arrays, conditionals). Suggest hands-on coding practice, guided examples, pair programming, and small but complete projects.
-   - **60–79% (Upper Intermediate):** Focus on advanced concepts (OOP, debugging, optimization, error handling). Include project-based learning, real-world problem-solving challenges, and practice with slightly larger applications.
-   - **80–100% (Advanced):** Focus on mastery and specialization (frameworks, algorithms, open-source contributions, building real-world projects). Recommend portfolio-driven projects, competitive programming, and advanced resources.
-
-3. **For the detected score range, provide**:
-   - **Strength & weakness analysis:** Clear breakdown of what’s working and what needs work
-   - **Topics to prioritize:** Why these topics matter for skill growth
-   - **Learning approaches:** Mix of theory, coding exercises, real projects, and reflection
-   - **Resources:** Books, websites, video series, coding platforms, podcasts, and communities with **clickable links**
-   - **Daily and weekly study routine:** Suggested time commitment, breaks, and coding/practice balance
-   - **Mini-projects/challenges:** Fun, achievable projects that apply the new skills
-   - **Stretch goals:** Ambitious but optional activities to push boundaries
-   - **Estimated 4–6 week progressive schedule:** Weekly milestones, checkpoints, and reflection prompts
-   - **Motivation boosters:** Quotes, gamification ideas, or self-reward strategies
-
-4. **Structure the study planner with**:
-   - Motivating introduction (celebrating progress, no greetings like "Hi")
-   - Strengths & weaknesses analysis
-   - Step-by-step study activities
-   - Resource recommendations with actionable links
-   - Daily & weekly planner suggestions
-   - Mini-project ideas with increasing complexity
-   - Stretch goals for ambitious learners
-   - Weekly checkpoints and reflection questions
-   - Encouraging conclusion to maintain momentum
-
-**Tone and formatting**:
-- Warm, motivating, and supportive
-- Clear headings, numbered lists, and bullet points
-- Avoid jargon, code snippets, or JSON
-- Make it feel fully personalized, as if the planner was crafted for this learner’s unique quiz data
-- Output should feel like a structured study planner, not a roadmap
-
-Goal: Produce an actionable, motivating, and confidence-building **study planner** that guides the learner step by step in improving their ${lang} skills.
+Goal: Produce an actionable, **bullet-point-based study planner** for ${lang} that is fully readable and motivating.
 `;
 
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
@@ -300,6 +290,7 @@ Goal: Produce an actionable, motivating, and confidence-building **study planner
             const studyPlanText = await generatePlanForLanguage(language, quizzes);
             user.studyPlans.set(language, studyPlanText);
             await user.save();
+            await addNotification(userId, `Study plan for ${language} has been generated successfully.`);
             return res.status(200).json({ success: true, language, studyPlan: studyPlanText });
         }
 
@@ -310,7 +301,7 @@ Goal: Produce an actionable, motivating, and confidence-building **study planner
             }
         }
         await user.save();
-
+        
         return res.status(200).json({
             success: true,
             studyPlansByLanguage: Object.fromEntries(user.studyPlans),
@@ -325,6 +316,7 @@ Goal: Produce an actionable, motivating, and confidence-building **study planner
         });
     }
 };
+
 
 
 const getStudyPlans = async (req, res) => {
@@ -381,61 +373,41 @@ const generateRoadMap = async (req, res) => {
             return acc;
         }, {});
 
+
         async function generateRoadmapForLanguage(lang, quizzes) {
             const historySummary = quizzes
-                .map(q => {
-                    const percent = ((q.correct / q.total) * 100).toFixed(1);
-                    return `- ${q.correct}/${q.total} (${percent}%) on ${new Date(q.date).toLocaleDateString()}`;
+                .map((q, idx) => {
+                    const answersSummary = (q.playedQuestions || [])
+                        .map((pq, i) => {
+                            const questionText = pq.question ? pq.question.replace(/\n/g, " ") : "No question text";
+                            const selected = pq.selectedAnswer || "No answer selected";
+                            const correct = pq.correctAnswer || "No correct answer";
+                            return `   • Q${i + 1}: "${questionText}" | User Selected Answer: "${selected}" | Correct Answer: "${correct}"`;
+                        })
+                        .join("\n");
+
+                    return `• Quiz ${idx + 1} taken on ${new Date(q.date).toLocaleDateString()}:\n${answersSummary}`;
                 })
                 .join("\n");
 
-            const avgPercent =
-                quizzes.reduce((acc, q) => acc + (q.correct / q.total) * 100, 0) / quizzes.length;
-
             const prompt = `
-You are an expert programming mentor AI that creates **amazing, personalized, confidence-building learning roadmaps** for users based on their quiz history and performance data.
+You are an expert programming mentor AI. Based on the following **quiz history in ${lang}**, create a **deep, personalized, confidence-building learning roadmap**.
 
-The user has been practicing ${lang}. Here is their quiz history:
-
+**User Quiz History:**
 ${historySummary}
 
-Their average score in ${lang} is ${avgPercent.toFixed(1)}%.
+**Instructions:**
+- Analyze patterns in the user's quiz attempts to identify **strengths, weaknesses, and common mistakes**.
+- Suggest **topics to focus on** based on actual quiz content.
+- Provide a **phased learning roadmap** with **milestones**, **hands-on exercises**, and **mini-projects**.
+- Include **resources**: books, videos, platforms, and communities with **clickable links**.
+- Give **daily and weekly study routines** for practical progress.
+- Provide **motivational guidance**: celebrate milestones, inspire curiosity and confidence.
+- Structure the roadmap with **bullet points, numbered lists, and headings**.
+- Avoid percentages, abstract levels, or generic labels. Focus on **practical, actionable steps**.
+- Make it feel like a personal mentor analyzed the quizzes and wrote the roadmap specifically for this learner.
 
-Your task:
-
-1. **Analyze performance trends** and current level, highlighting:
-   - Areas where the user has shown strength
-   - Topics where improvement is needed
-   - Patterns in quiz results that can guide a tailored roadmap
-
-2. **Generate a confidence-building roadmap** based on their current level:
-   - **0–39% (Beginner)** → Start from fundamentals: syntax, variables, loops, input/output. Slow-paced, highly guided, celebrate small wins to build confidence.
-   - **40–59% (Lower Intermediate)** → Strengthen problem-solving: functions, arrays, conditionals, debugging, simple projects. Show how they can create real apps and feel achievement.
-   - **60–79% (Upper Intermediate)** → Advanced topics: OOP, debugging, optimization, error handling, data structures. Include project-based learning that demonstrates tangible progress.
-   - **80–100% (Advanced)** → Mastery: frameworks, libraries, algorithms, real-world projects, open-source contributions, and career prep. Encourage leadership, mentorship, and portfolio visibility.
-
-3. **For the identified roadmap level, provide**:
-   - **Introduction**: Recognize achievements so far, motivate, and build confidence.
-   - **Phased Roadmap**: Break learning into milestones emphasizing gradual, achievable progression.
-   - **Skills/Topics per Phase**: Explain what to learn, why it matters, and estimated timelines.
-   - **Resources**: Books, video tutorials, online platforms, lecture notes, communities with **clickable links**, prioritizing ${lang}-specific ones.
-   - **Projects/Challenges**: Realistic, motivating projects that make the user feel accomplished.
-   - **Checkpoints**: How to measure readiness for next phase, celebrating progress along the way.
-   - **Career/Portfolio Guidance**: Show how they can showcase skills, build confidence in interviews, and create visible impact.
-
-4. **Motivational guidance**:
-   - Reinforce that growth is gradual but rewarding.
-   - Encourage the user to celebrate every milestone.
-   - Inspire consistent learning and curiosity.
-   - Use empowering language throughout, not just at the start and end.
-
-**Tone and formatting**:
-- Warm, supportive, and empowering
-- Headings, numbered lists, bullet points
-- Avoid jargon, code, or JSON
-- Make it feel as if the roadmap is **crafted specifically for this user**, directly from their quiz performance
-
-Goal: The output should be an **amazing, motivating, structured roadmap** that makes the user feel capable, confident, and excited to learn ${lang}.
+Goal: Output a readable, **bullet-point-based roadmap** that motivates and guides the learner in mastering ${lang}.
 `;
 
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
@@ -451,6 +423,7 @@ Goal: The output should be an **amazing, motivating, structured roadmap** that m
             const roadmapText = await generateRoadmapForLanguage(language, quizzes);
             user.roadmap.set(language, roadmapText);
             await user.save();
+            await addNotification(userId, `Roadmap for ${language} has been generated successfully.`);
             return res.status(200).json({ success: true, language, roadmap: roadmapText });
         }
 
@@ -476,6 +449,9 @@ Goal: The output should be an **amazing, motivating, structured roadmap** that m
         });
     }
 };
+
+
+
 
 const getRoadmaps = async (req, res) => {
     try {
@@ -692,7 +668,107 @@ const clearChatHistory = async (req, res) => {
     }
 };
 
+
+
+const addNotification = async (userId,message) => {
+    try {
+        await userModel.findByIdAndUpdate(userId, {
+            $push: { notifications: { message } },
+        });
+    } catch (error) {
+        console.error("Add Notification Error:", error);
+    }
+};
+
+const getNotifications = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const user = await userModel.findById(userId).select("notifications");
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        const notifications = user.notifications.sort((a, b) => b.date - a.date);
+
+        res.status(200).json({ success: true, notifications });
+    } catch (error) {
+        console.error("Get Notifications Error:", error);
+        res.status(500).json({ success: false, message: "Failed to fetch notifications" });
+    }
+};
+
+const markAsRead = async (req, res) => {
+    try {
+        const { notificationId } = req.body;
+        const userId = req.userId;
+
+        const updated = await userModel.updateOne(
+            { _id: userId, "notifications._id": notificationId },
+            { $set: { "notifications.$.read": true } }
+        );
+
+        if (updated.modifiedCount === 0) {
+            return res.status(404).json({ success: false, message: "Notification not found" });
+        }
+
+        res.status(200).json({ success: true, message: "Notification marked as read" });
+    } catch (error) {
+        console.error("Mark Notification Error:", error);
+        res.status(500).json({ success: false, message: "Failed to mark notification" });
+    }
+};
+
+
+
+const deleteNotification = async (req, res) => {
+    try {
+        const { notificationId } = req.params; 
+        const userId = req.userId;
+
+        const result = await userModel.updateOne(
+            { _id: userId },
+            { $pull: { notifications: { _id: notificationId } } }
+        );
+
+        if (result.modifiedCount === 0) {
+            return res
+                .status(404)
+                .json({ success: false, message: "Notification not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Notification deleted successfully",
+        });
+    } catch (error) {
+        console.error("Delete Notification Error:", error);
+        res
+            .status(500)
+            .json({ success: false, message: "Failed to delete notification" });
+    }
+};
+
+
+const deleteAllNotifications = async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        await userModel.findByIdAndUpdate(userId, { $set: { notifications: [] } });
+
+        res.status(200).json({
+            success: true,
+            message: "All notifications deleted successfully",
+        });
+    } catch (error) {
+        console.error("Delete All Notifications Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete all notifications",
+        });
+    }
+};
+
+
 module.exports = {
     loginController, registerController, getUserInfo, updateProfileController, chatbotController, getChatHistory,clearChatHistory,
     getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,getLanguages,getCompletedMocks,
-    saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,getMockCardDetails,getQuizCardDetails };
+    saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,getMockCardDetails,getQuizCardDetails,
+    addNotification,getNotifications,markAsRead,deleteNotification,deleteAllNotifications };

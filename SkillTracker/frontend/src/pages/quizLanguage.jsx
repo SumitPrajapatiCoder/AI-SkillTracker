@@ -74,23 +74,21 @@ const QuizLanguage = () => {
         0
       );
 
+      const playedQuestions = questions.map((q, idx) => ({
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        selectedAnswer: answers[idx] || null,
+      }));
+
       try {
         const token = localStorage.getItem("token");
         await axios.post(
           "/api/v1/user/save-quiz-result",
-          { language, correct: finalScore, total: questions.length },
+          { language, correct: finalScore, total: questions.length, playedQuestions },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success("Quiz submitted!");
-        const completedQuizzes =
-          JSON.parse(localStorage.getItem("completedQuizzes")) || [];
-        if (!completedQuizzes.includes(language)) {
-          completedQuizzes.push(language);
-          localStorage.setItem(
-            "completedQuizzes",
-            JSON.stringify(completedQuizzes)
-          );
-        }
       } catch (err) {
         toast.error("Failed to save result");
         console.error(err);
@@ -119,7 +117,6 @@ const QuizLanguage = () => {
   const handlePrevious = () => {
     if (current > 0) setCurrent((c) => c - 1);
   };
-
 
   if (completed) {
     const finalScore = questions.reduce(
@@ -156,7 +153,6 @@ const QuizLanguage = () => {
                     const isSelected = answers[idx] === opt;
 
                     return (
-
                       <div
                         key={i}
                         className={`review-option 
@@ -164,15 +160,21 @@ const QuizLanguage = () => {
     ${isSelected && !isCorrect ? "wrong" : ""}`}
                       >
                         <pre>
-                          <code dangerouslySetInnerHTML={{ __html: highlightedOpt }} />
+                          <code
+                            dangerouslySetInnerHTML={{
+                              __html: highlightedOpt,
+                            }}
+                          />
                         </pre>
                         {isCorrect || isSelected ? (
-                          <span className={`option-badge ${isCorrect ? "correct-badge" : "wrong-badge"}`}>
+                          <span
+                            className={`option-badge ${isCorrect ? "correct-badge" : "wrong-badge"
+                              }`}
+                          >
                             {isCorrect ? "Correct" : "Wrong"}
                           </span>
                         ) : null}
                       </div>
-
                     );
                   })}
                 </div>
@@ -205,7 +207,6 @@ const QuizLanguage = () => {
       </div>
     );
   }
-
 
   if (questions.length === 0) return <p>Loading questions...</p>;
 
@@ -250,7 +251,9 @@ const QuizLanguage = () => {
                   onChange={() => handleAnswer(opt)}
                 />
                 <pre className="option-code">
-                  <code dangerouslySetInnerHTML={{ __html: highlightedOpt }} />
+                  <code
+                    dangerouslySetInnerHTML={{ __html: highlightedOpt }}
+                  />
                 </pre>
               </label>
             );
@@ -271,6 +274,3 @@ const QuizLanguage = () => {
 };
 
 export default QuizLanguage;
-
-
-

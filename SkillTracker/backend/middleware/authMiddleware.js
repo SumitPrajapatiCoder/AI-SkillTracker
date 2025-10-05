@@ -20,6 +20,13 @@ module.exports = async (req, res, next) => {
                 return res.status(404).send({ message: "User not found", success: false });
             }
 
+            if (user.isBlocked) {
+                return res.status(403).send({
+                    message: "User is blocked by admin",
+                    success: false,
+                });
+            }
+
             req.body = req.body || {};
             req.body.userId = decode.id;
             req.userId = decode.id;

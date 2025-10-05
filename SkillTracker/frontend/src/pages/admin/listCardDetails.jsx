@@ -150,6 +150,7 @@ const ListCardDetails = () => {
                   />
                   <input
                     type="number"
+                    min="1"
                     value={editForm.questions}
                     onChange={(e) =>
                       setEditForm({ ...editForm, questions: e.target.value })
@@ -157,6 +158,7 @@ const ListCardDetails = () => {
                   />
                   <input
                     type="number"
+                    min="1"
                     value={editForm.time}
                     onChange={(e) =>
                       setEditForm({ ...editForm, time: e.target.value })

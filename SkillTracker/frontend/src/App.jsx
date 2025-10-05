@@ -20,6 +20,7 @@ import AllQuestion from "./pages/admin/questionList";
 import UploadCardDetails from "./pages/admin/uploadCardDetails";
 import ListCardDetails from "./pages/admin/listCardDetails";
 import Chatbot from "./pages/chatbot";
+import Notification from "./pages/notification";
 import "react-toastify/dist/ReactToastify.css";
 
 
@@ -34,6 +35,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Chatbot />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/notification"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Notification />
               </Layout>
             </ProtectedRoute>
           }

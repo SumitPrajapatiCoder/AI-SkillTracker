@@ -106,6 +106,7 @@
 }
 
 
+
 .chat-bubble {
   max-width: 80%;
   padding: 14px 18px;
@@ -197,7 +198,7 @@
 .chatbot-container.dark-mode .input-row {
   background: rgba(0, 0, 0, 0.4);
 }
-
+/* 
 .input-row input {
   flex: 1;
   padding: 12px;
@@ -230,7 +231,56 @@
 .input-row button:hover {
   transform: scale(1.05);
   background: linear-gradient(135deg, #005fcc, #008cff);
+} */
+
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-top: 1px solid #444;
+  background: #1e1e2f;
 }
+
+.input-row input {
+  flex: 1;
+  padding: 10px 15px;
+  border-radius: 20px;
+  border: 1px solid #555;
+  background: #2a2a40;
+  color: #fff;
+  outline: none;
+}
+
+.btn-mic, .btn-send {
+  background: #4caf50;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-mic:hover {
+  background: #45a049;
+}
+
+.btn-send {
+  background: #1e88e5;
+}
+
+.btn-send:hover {
+  background: #1565c0;
+}
+
+.btn-mic svg, .btn-send svg {
+  font-size: 18px;
+  color: #fff;
+}
+
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(15px); }

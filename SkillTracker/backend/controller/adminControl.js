@@ -4,6 +4,7 @@ const userModel = require("../models/userModel");
 const languageModel = require("../models/languageModel");
 const quizCardModel = require("../models/quizCardModel");
 const mockCardModel = require("../models/mockCardModel");
+const { addNotification }=require("./userControl");
 
 // const OpenAI = require("openai");
 // const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -51,92 +52,12 @@ const mockCardModel = require("../models/mockCardModel");
 
 
 
-
-
-// const { GoogleGenerativeAI } = require("@google/generative-ai");
-// const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-
-// const generateAIQuestion = async (req, res) => {
-//   try {
-//     const { language, difficulty } = req.body;
-
-//     if (!language || !difficulty) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Language and difficulty are required",
-//       });
-//     }
-
-//     const prompt = `
-// Generate a UNIQUE ${difficulty} level multiple-choice programming question in ${language}.
-// Make sure it's **different** from any previous question.
-// It should have:
-// - A creative and distinct question
-// - Exactly 4 options
-// - A clearly marked correct answer
-// Respond STRICTLY in JSON format like:
-// {
-//   "question": "Your question here?",
-//   "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-//   "correctAnswer": "Correct option exactly as in the options"
-// }`;
-
-//     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-//     const result = await model.generateContent([prompt]);
-//     const text = result.response.text();
-
-//     const match = text.match(/\{[\s\S]*\}/);
-//     if (!match) {
-//       return res.status(500).json({
-//         success: false,
-//         message: "Failed to extract JSON from AI response",
-//         raw: text,
-//       });
-//     }
-
-//     let parsed;
-//     try {
-//       parsed = JSON.parse(match[0]);
-//     } catch (e) {
-//       return res.status(500).json({
-//         success: false,
-//         message: "Failed to parse extracted JSON",
-//         raw: match[0],
-//       });
-//     }
-
-//     return res.status(200).json({ success: true, data: parsed });
-
-//   } catch (err) {
-//     console.error("Gemini API Error:", err);
-//     if (err.message.includes("429")) {
-//       return res.status(429).json({
-//         success: false,
-//         message: "Gemini API quota limit exceeded. Try again later.",
-//         error: err.message,
-//       });
-//     }
-
-//     return res.status(500).json({
-//       success: false,
-//       message: "Gemini generation failed",
-//       error: err.message,
-//     });
-//   }
-// };
-
-
-
-
-
-
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
 const generateAIQuestion = async (req, res) => {
   try {
-    const { language, difficulty, type } = req.body;
+    const { language, difficulty, type, count = 1 } = req.body;
 
     if (!language || !difficulty || !["quiz", "mock"].includes(type)) {
       return res.status(400).json({
@@ -145,47 +66,44 @@ const generateAIQuestion = async (req, res) => {
       });
     }
 
+    const numQuestions = Math.min(parseInt(count), 20);
     const Model = type === "quiz" ? quizModel : mockModel;
 
-    const existing = await Model.find({ language, difficulty }).select("question -_id").lean();
-    const existingQuestions = existing.map(q => q.question).slice(0, 10); 
+    const existing = await Model.find({ language, difficulty })
+      .select("question -_id")
+      .lean();
+    const existingQuestions = existing.map((q) => q.question).slice(0, 20);
 
     const avoidList = existingQuestions.length
       ? `Avoid these existing questions:\n- ${existingQuestions.join("\n- ")}\n\n`
       : "";
 
-
     const prompt = `
 ${avoidList}
-Now generate a UNIQUE ${difficulty} level multiple-choice programming question in ${language}.
+Generate ${numQuestions} UNIQUE ${difficulty}-level multiple-choice programming questions in ${language}.
+Each question must be based on a short code snippet and ask the user to predict the output or behavior.
 
-The question **must** be based on a short code snippet and ask the user to predict the output or behavior of the code.
+Strictly respond in valid JSON ARRAY format like:
+[
+  {
+    "question": "What will be the output of the following ${language} code?\\n<insert code here>",
+    "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+    "correctAnswer": "Correct option exactly as in the options"
+  }
+]
 
-Strictly respond in valid **JSON** format like:
-{
-  "question": "What will be the output of the following ${language} code?\n<insert code here>",
-  "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-  "correctAnswer": "Correct option exactly as in the options"
-}
-
-Make sure:
-- The question includes a short complete code snippet.
-- All options are plausible.
-- Do NOT return any explanation or markdown formatting — only raw JSON.
+Do NOT include explanations or markdown. Only pure JSON array.
 `;
 
-
-    // const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-    
     const result = await model.generateContent([prompt]);
     const text = result.response.text();
 
-    const match = text.match(/\{[\s\S]*\}/);
+    const match = text.match(/\[[\s\S]*\]/);
     if (!match) {
       return res.status(500).json({
         success: false,
-        message: "Failed to extract JSON from AI response",
+        message: "Failed to extract JSON array from AI response",
         raw: text,
       });
     }
@@ -196,30 +114,21 @@ Make sure:
     } catch (e) {
       return res.status(500).json({
         success: false,
-        message: "Failed to parse extracted JSON",
+        message: "Failed to parse AI JSON array",
         raw: match[0],
       });
     }
-    const duplicate = await Model.findOne({ question: parsed.question });
-    if (duplicate) {
-      return res.status(409).json({
-        success: false,
-        message: "Generated question already exists. Try again.",
-      });
+
+    const uniqueQuestions = [];
+    for (const q of parsed) {
+      const exists = await Model.findOne({ question: q.question });
+      if (!exists) uniqueQuestions.push(q);
     }
 
-    return res.status(200).json({ success: true, data: parsed });
-
+    await addNotification(req.userId, `Generated ${uniqueQuestions.length} new ${type} questions for ${language}.`);
+    return res.status(200).json({ success: true, data: uniqueQuestions });
   } catch (err) {
     console.error("Gemini API Error:", err);
-    if (err.message.includes("429")) {
-      return res.status(429).json({
-        success: false,
-        message: "Gemini API quota exceeded",
-        error: err.message,
-      });
-    }
-
     return res.status(500).json({
       success: false,
       message: "Gemini generation failed",
@@ -228,70 +137,55 @@ Make sure:
   }
 };
 
-
- const uploadLanguage = async (req, res) => {
-  try {
-    const { name } = req.body;
-
-    if (!name) {
-      return res.status(400).send({ success: false, message: "Language name required" });
-    }
-
-    const exists = await languageModel.findOne({ name });
-    if (exists) {
-      return res.status(400).send({ success: false, message: "Language already exists" });
-    }
-
-    const newLang = new languageModel({ name });
-    await newLang.save();
-
-    res.status(201).send({ success: true, message: "Language uploaded", data: newLang });
-  } catch (error) {
-    console.error("Upload Language Error:", error);
-    res.status(500).send({ success: false, message: "Failed to upload language" });
-  }
-};
-
- const getLanguages = async (req, res) => {
-  try {
-    const langs = await languageModel.find().sort({ name: 1 });
-    res.status(200).send({ success: true, data: langs });
-  } catch (error) {
-    console.error("Get Languages Error:", error);
-    res.status(500).send({ success: false, message: "Failed to fetch languages" });
-  }
-};
-
-
 const uploadQuestion = async (req, res) => {
-    try {
-        const { type, question, options, correctAnswer, language,difficulty } = req.body;
+  try {
+    const { type, questions, question, options, correctAnswer, language, difficulty } = req.body;
 
-        if (!type || !["quiz", "mock"].includes(type)) {
-            return res.status(400).send({ success: false, message: "Invalid type" });
-        }
-
-        if (!["Easy", "Medium", "Hard"].includes(difficulty)) {
-            return res.status(400).send({ success: false, message: "Invalid difficulty" });
-        }
-        const Model = type === "quiz" ? quizModel : mockModel;
-
-        const newQuestion = new Model({
-            question,
-            options,
-            correctAnswer,
-            language,
-            difficulty, 
-            createdBy: req.userId
-        });
-
-        await newQuestion.save();
-        res.status(201).send({ success: true, message: `${type} question uploaded` });
-    } catch (error) {
-        console.log("Upload Error:", error);
-        res.status(500).send({ success: false, message: "Upload failed" });
+    if (!type || !["quiz", "mock"].includes(type)) {
+      return res.status(400).send({ success: false, message: "Invalid type" });
     }
+
+    const Model = type === "quiz" ? quizModel : mockModel;
+
+    if (Array.isArray(questions) && questions.length > 0) {
+      const newDocs = questions.map((q) => ({
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        language: q.language,
+        difficulty: q.difficulty,
+        createdBy: req.userId,
+      }));
+      await Model.insertMany(newDocs);
+      return res.status(201).send({
+        success: true,
+        message: `${questions.length} ${type} questions uploaded`,
+      });
+    }
+
+    if (question && options && correctAnswer && language && difficulty) {
+      const newQuestion = new Model({
+        question,
+        options,
+        correctAnswer,
+        language,
+        difficulty,
+        createdBy: req.userId,
+      });
+      await newQuestion.save();
+      return res.status(201).send({
+        success: true,
+        message: `${type} question uploaded successfully`,
+      });
+    }
+    
+    return res.status(400).send({ success: false, message: "Invalid input" });
+  } catch (error) {
+    console.log("Upload Error:", error);
+    res.status(500).send({ success: false, message: "Upload failed" });
+  }
 };
+
 
 
 const deleteQuestion = async (req, res) => {
@@ -305,6 +199,7 @@ const deleteQuestion = async (req, res) => {
 
         const Model = type === "quiz" ? quizModel : mockModel;
         const deleted = await Model.findByIdAndDelete(id);
+        await addNotification(req.userId, `Deleted one ${type} question (${deleted.language}).`);
 
         if (!deleted) {
             return res.status(404).send({ success: false, message: "Question not found" });
@@ -331,6 +226,7 @@ const editQuestion = async (req, res) => {
     const Model = type === "quiz" ? quizModel : mockModel;
 
     const updatedQuestion = await Model.findByIdAndUpdate(id, updateData, { new: true });
+    await addNotification(req.userId, `Updated a ${type} question (${updatedQuestion.language}).`);
 
     if (!updatedQuestion) {
       return res.status(404).send({ success: false, message: "Question not found" });
@@ -376,6 +272,60 @@ const listAllQuestions = async (req, res) => {
 };
 
 
+const uploadLanguage = async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).send({ success: false, message: "Language name required" });
+    }
+
+    const exists = await languageModel.findOne({ name });
+    if (exists) {
+      return res.status(400).send({ success: false, message: "Language already exists" });
+    }
+
+    const newLang = new languageModel({ name });
+    await newLang.save();
+    await addNotification(req.userId, `Added new programming language: ${name}.`);
+
+
+    res.status(201).send({ success: true, message: "Language uploaded", data: newLang });
+  } catch (error) {
+    console.error("Upload Language Error:", error);
+    res.status(500).send({ success: false, message: "Failed to upload language" });
+  }
+};
+
+const getLanguages = async (req, res) => {
+  try {
+    const langs = await languageModel.find().sort({ name: 1 });
+    res.status(200).send({ success: true, data: langs });
+  } catch (error) {
+    console.error("Get Languages Error:", error);
+    res.status(500).send({ success: false, message: "Failed to fetch languages" });
+  }
+};
+
+const deleteLanguage = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const lang = await languageModel.findByIdAndDelete(id);
+    await addNotification(req.userId, `Deleted language: ${lang.name}.`);
+
+    if (!lang) {
+      return res.status(404).send({ success: false, message: "Language not found" });
+    }
+
+    res.status(200).send({ success: true, message: "Language deleted successfully" });
+  } catch (error) {
+    console.error("Delete Language Error:", error);
+    res.status(500).send({ success: false, message: "Failed to delete language" });
+  }
+};
+
+
 
 const listAllUsers = async (req, res) => {
     try {
@@ -390,7 +340,14 @@ const listAllUsers = async (req, res) => {
 
 const blockUser = async (req, res) => {
   try {
+    const user = await userModel.findById(req.params.id);
+    if (user.isAdmin) {
+      return res.status(400).send({ success: false, message: "Cannot block an admin user" });
+    }
     await userModel.findByIdAndUpdate(req.params.id, { isBlocked: true });
+    await addNotification(req.userId, `You blocked a user ${user.name} (ID: ${req.params.id}).`);
+    await addNotification(req.params.id, "Your account has been blocked by admin.");
+
     res.status(200).send({ success: true, message: "User blocked successfully" });
   } catch (error) {
     console.error(error);
@@ -400,7 +357,14 @@ const blockUser = async (req, res) => {
 
 const unblockUser = async (req, res) => {
   try {
+    const user = await userModel.findById(req.params.id);
+    if (!user.isBlocked) {
+      return res.status(400).send({ success: false, message: "User is not blocked" });
+    }
     await userModel.findByIdAndUpdate(req.params.id, { isBlocked: false });
+    await addNotification(req.userId, `You unblocked a user ${user.name || user.email} (ID: ${req.params.id}).`);
+    await addNotification(req.params.id, "Your account has been unblocked by admin.");
+
     res.status(200).send({ success: true, message: "User unblocked successfully" });
   } catch (error) {
     console.error(error);
@@ -410,7 +374,12 @@ const unblockUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
+    const user = await userModel.findById(req.params.id);
+    if (!user) {
+      return res.status(404).send({ success: false, message: "User not found" });
+    }
     await userModel.findByIdAndDelete(req.params.id);
+    await addNotification(req.userId, `Deleted user ${user.name} (ID: ${req.params.id}).`);
     res.status(200).send({ success: true, message: "User deleted successfully" });
   } catch (error) {
     console.error(error);
@@ -418,12 +387,12 @@ const deleteUser = async (req, res) => {
   }
 };
 
-
 const toggleAdminRole = async (req, res) => {
   try {
     const { id } = req.params;
 
     const user = await userModel.findById(id);
+
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -438,6 +407,12 @@ const toggleAdminRole = async (req, res) => {
 
     user.isAdmin = !user.isAdmin;
     await user.save();
+    await addNotification(req.userId, `You changed admin status for ${user.name}.`);
+    await addNotification(
+      user._id,
+      `Your admin role has been ${user.isAdmin ? "granted " : "removed "} by another admin.`
+    );
+
 
     res.status(200).json({
       success: true,
@@ -475,6 +450,8 @@ const addCardDetails = async (req, res) => {
     });
 
     await newCard.save();
+    await addNotification(req.userId, `Added a new ${type} card for ${name}.`);
+
 
     return res.status(201).json({
       success: true,
@@ -530,6 +507,8 @@ const deleteCard = async (req, res) => {
       return res.status(400).json({ error: "Invalid card type" });
     }
 
+    await addNotification(req.userId, `Deleted a ${type} card.`);
+
     return res.status(200).json({ success: true, message: "Card deleted successfully" });
   } catch (error) {
     console.error("Delete Card Error:", error);
@@ -540,7 +519,7 @@ const deleteCard = async (req, res) => {
   }
 };
 
-// Update Card
+
 const updateCard = async (req, res) => {
   try {
     const { id } = req.params;
@@ -555,6 +534,7 @@ const updateCard = async (req, res) => {
     } else {
       return res.status(400).json({ error: "Invalid card type" });
     }
+    await addNotification(req.userId, `Updated a ${type} card (${updatedCard.language}).`);
 
     return res.status(200).json({ success: true, data: updatedCard });
   } catch (error) {
@@ -573,6 +553,6 @@ module.exports = {
     listAllUsers,
     generateAIQuestion,
     editQuestion,
-    blockUser,unblockUser,deleteUser,toggleAdminRole,
+    blockUser,unblockUser,deleteUser,toggleAdminRole,deleteLanguage,
   uploadLanguage,getLanguages,addCardDetails,getQuizCardDetails,getMockCardDetails,deleteCard,updateCard
 };
