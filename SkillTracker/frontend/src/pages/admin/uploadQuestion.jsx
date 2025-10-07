@@ -6,6 +6,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import hljs from "highlight.js";
+import "highlight.js/styles/github-dark.css";
 
 const MySwal = withReactContent(Swal);
 
@@ -27,6 +29,11 @@ const AdminUpload = () => {
   const [aiQuestions, setAiQuestions] = useState([]);
 
   const difficulties = ["Easy", "Medium", "Hard"];
+
+  // Highlight questions whenever AI questions update
+  useEffect(() => {
+    hljs.highlightAll();
+  }, [aiQuestions]);
 
   const fetchLanguages = async () => {
     try {
@@ -56,9 +63,7 @@ const AdminUpload = () => {
       await axios.post(
         "/api/v1/admin/upload-language",
         { name: newLang.trim() },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Language uploaded!");
       setNewLang("");
@@ -202,7 +207,6 @@ const AdminUpload = () => {
     setAiQuestions([]);
   };
 
-
   return (
     <div className="container">
       <div className="button-row">
@@ -317,7 +321,7 @@ const AdminUpload = () => {
               <h4>Q{index + 1}</h4>
               <div className="code-highlight">
                 <pre>
-                  <code>{q.question}</code>
+                  <code className="hljs">{q.question}</code>
                 </pre>
               </div>
 
@@ -340,7 +344,6 @@ const AdminUpload = () => {
           >
             Clear All
           </button>
-
         </div>
       )}
 

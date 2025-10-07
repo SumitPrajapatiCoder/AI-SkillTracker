@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import "../styles/header.css";
 import axios from "axios";
-import { FaBars, FaTimes, FaChevronDown, FaChevronUp,FaBell } from "react-icons/fa";
+import { FaBars, FaTimes, FaChevronDown, FaChevronUp, FaBell } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 
 const Header = () => {
   const [user, setUser] = useState(null);
@@ -14,8 +13,7 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
   const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
-
- 
+  const location = useLocation();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -37,7 +35,6 @@ const Header = () => {
     fetchUser();
   }, []);
 
-
   const fetchNotificationCount = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -54,10 +51,9 @@ const Header = () => {
 
   useEffect(() => {
     fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 60000);
+    const interval = setInterval(fetchNotificationCount, 1000);
     return () => clearInterval(interval);
   }, []);
-
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 1024);
@@ -76,6 +72,8 @@ const Header = () => {
     setShowAdminMenu(false);
   };
 
+  const isActive = (path) => location.pathname === path;
+
   const MenuLinks = () => (
     <>
       {user?.isAdmin && (
@@ -88,28 +86,144 @@ const Header = () => {
           </div>
           {showAdminMenu && (
             <div className="admin-menu">
-              <Link to="/upload" onClick={handleLinkClick}>Upload Question</Link>
-              <Link to="/allQuestion" onClick={handleLinkClick}>All Questions</Link>
-              <Link to="/upload-card" onClick={handleLinkClick}>Upload Card Details</Link>
-              <Link to="/get-card" onClick={handleLinkClick}>List Card Details</Link>
-              <Link to="/userList" onClick={handleLinkClick}>User List</Link>
+              <Link
+                to="/upload"
+                onClick={handleLinkClick}
+                className={isActive("/upload") ? "active-link" : ""}
+              >
+                Upload Question
+              </Link>
+              <Link
+                to="/allQuestion"
+                onClick={handleLinkClick}
+                className={isActive("/allQuestion") ? "active-link" : ""}
+              >
+                All Questions
+              </Link>
+              <Link
+                to="/upload-card"
+                onClick={handleLinkClick}
+                className={isActive("/upload-card") ? "active-link" : ""}
+              >
+                Upload Card Details
+              </Link>
+              <Link
+                to="/get-card"
+                onClick={handleLinkClick}
+                className={isActive("/get-card") ? "active-link" : ""}
+              >
+                List Card Details
+              </Link>
+              <Link
+                to="/upload-contest"
+                onClick={handleLinkClick}
+                className={isActive("/upload-contest") ? "active-link" : ""}
+              >
+                Upload Contest
+              </Link>
+              <Link
+                to="/view-contest"
+                onClick={handleLinkClick}
+                className={isActive("/view-contest") ? "active-link" : ""}
+              >
+                List Contest Details
+              </Link>
+              <Link
+                to="/userList"
+                onClick={handleLinkClick}
+                className={isActive("/userList") ? "active-link" : ""}
+              >
+                User List
+              </Link>
             </div>
           )}
         </div>
       )}
-      <Link to="/home" onClick={handleLinkClick}>Home</Link>
-      <Link to="/profile" onClick={handleLinkClick}>Profile</Link>
-      <Link to="/quiz" onClick={handleLinkClick}>Quiz</Link>
-      <Link to="/mock_test" onClick={handleLinkClick}>Mock Test</Link>
-      <Link to="/roadmap" onClick={handleLinkClick}>Roadmap</Link>
-      <Link to="/study_plane" onClick={handleLinkClick}>Study Plan</Link>
-      <Link to="/chatbot_page" onClick={handleLinkClick}>Chatbot</Link>
-      <Link to="/notification" onClick={handleLinkClick} className="notification-link">
-        <FaBell className="notification-icon" />
-        {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+
+      <Link
+        to="/home"
+        onClick={handleLinkClick}
+        className={isActive("/home") ? "active-link" : ""}
+      >
+        Home
       </Link>
+
+      <Link
+        to="/profile"
+        onClick={handleLinkClick}
+        className={isActive("/profile") ? "active-link" : ""}
+      >
+        Profile
+      </Link>
+
+      <Link
+        to="/contest"
+        onClick={handleLinkClick}
+        className={isActive("/contest") ? "active-link" : ""}
+      >
+        Contest
+      </Link>
+
+      <Link
+        to="/quiz"
+        onClick={handleLinkClick}
+        className={isActive("/quiz") ? "active-link" : ""}
+      >
+        Quiz
+      </Link>
+
+      <Link
+        to="/mock_test"
+        onClick={handleLinkClick}
+        className={isActive("/mock_test") ? "active-link" : ""}
+      >
+        Mock Test
+      </Link>
+
+      <Link
+        to="/roadmap"
+        onClick={handleLinkClick}
+        className={isActive("/roadmap") ? "active-link" : ""}
+      >
+        Roadmap
+      </Link>
+
+      <Link
+        to="/study_plane"
+        onClick={handleLinkClick}
+        className={isActive("/study_plane") ? "active-link" : ""}
+      >
+        Study Plan
+      </Link>
+
+      <Link
+        to="/chatbot_page"
+        onClick={handleLinkClick}
+        className={isActive("/chatbot_page") ? "active-link" : ""}
+      >
+        Chatbot
+      </Link>
+
+      <Link
+        to="/notification"
+        onClick={handleLinkClick}
+        className={`notification-link ${isActive("/notification") ? "active-link" : ""
+          }`}
+      >
+        <FaBell className="notification-icon" />
+        {unreadCount > 0 && (
+          <span className="notification-badge">{unreadCount}</span>
+        )}
+      </Link>
+
       {user && (
-        <button className="logout-button" onClick={() => { handleLogout(); handleLinkClick(); }}>
+        <button
+          className="logout-button"
+          onClick={() => {
+            handleLogout();
+            handleLinkClick();
+          }}
+        >
           Logout
         </button>
       )}
@@ -143,8 +257,9 @@ const Header = () => {
         {!isMobile && <nav className="menu">{MenuLinks()}</nav>}
       </div>
 
-      <div className="right">{user && <span className="username">{user.name}</span>}</div>
-
+      <div className="right">
+        {user && <span className="username">{user.name}</span>}
+      </div>
 
       {isMobile && showDropdown && (
         <nav className="menu mobile-menu">{MenuLinks()}</nav>

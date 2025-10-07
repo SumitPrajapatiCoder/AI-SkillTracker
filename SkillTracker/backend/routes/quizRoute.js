@@ -1,5 +1,5 @@
 const express = require("express");
-const { getQuizByLanguage ,getMockByLanguage } = require("../controller/quizControl");
+const { getQuizByLanguage ,getMockByLanguage} = require("../controller/quizControl");
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();

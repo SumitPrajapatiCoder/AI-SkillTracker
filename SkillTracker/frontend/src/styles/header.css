@@ -224,3 +224,12 @@
     transform: translateY(0);
   }
 }
+
+.menu a.active-link {
+  color: #38bdf8 !important;
+  font-weight: 600;
+}
+
+.menu a.active-link::after {
+  width: 100%;
+}

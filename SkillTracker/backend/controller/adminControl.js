@@ -1,5 +1,6 @@
 const quizModel = require("../models/quizModel");
 const mockModel = require("../models/mockModel");
+const contestModel = require("../models/contestModel");
 const userModel = require("../models/userModel");
 const languageModel = require("../models/languageModel");
 const quizCardModel = require("../models/quizCardModel");
@@ -546,9 +547,148 @@ const updateCard = async (req, res) => {
   }
 };
 
+const generateContestQuestions = async (req, res) => {
+  try {
+    const { questionSize } = req.body;
+
+    if (!questionSize || questionSize <= 0) {
+      return res.status(400).json({ message: "Invalid question size" });
+    }
+
+    const quizCount = Math.floor(questionSize / 2);
+    const mockCount = questionSize - quizCount;
+
+    const quizQuestions = await quizModel.aggregate([{ $sample: { size: quizCount } }]);
+    const mockQuestions = await mockModel.aggregate([{ $sample: { size: mockCount } }]);
+
+    const combinedQuestions = [
+      ...quizQuestions.map(q => ({
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        language: q.language,
+        difficulty: q.difficulty,
+        source: "quiz",
+      })),
+      ...mockQuestions.map(m => ({
+        question: m.question,
+        options: m.options,
+        correctAnswer: m.correctAnswer,
+        language: m.language,
+        difficulty: m.difficulty,
+        source: "mock",
+      })),
+    ];
+
+    for (let i = combinedQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [combinedQuestions[i], combinedQuestions[j]] = [combinedQuestions[j], combinedQuestions[i]];
+    }
+    await addNotification(req.userId, `Generated contest questions (${questionSize}) Successfully.`);
+
+    res.status(200).json({ success: true, questions: combinedQuestions });
+  } catch (error) {
+    console.error("Error generating questions:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
+const createContest = async (req, res) => {
+  try {
+    const { questionSize, timeDuration, publishDateTime, questions } = req.body;
+    const adminId = req.user._id;
+
+    if (!questionSize || !timeDuration || !publishDateTime || !questions) {
+      return res.status(400).json({
+        message: "questionSize, timeDuration, publishDateTime, and questions are required",
+      });
+    }
+
+    const publishDate = new Date(publishDateTime);
+    if (isNaN(publishDate)) {
+      return res.status(400).json({ message: "Invalid publish date/time format" });
+    }
+
+    const contest = await contestModel.create({
+      questionSize: questions.length,
+      timeDuration,
+      publishDetails: {
+        date: publishDate,
+        formatted: publishDate.toLocaleString(),
+      },
+      questions,
+      createdBy: adminId,
+    });
+
+    await addNotification(req.userId, `Upload contest Questions Successfully (${contest._id}).`);
+
+    res.status(201).json({
+      success: true,
+      message: "Contest created successfully",
+      contestId: contest._id,
+      publishDetails: contest.publishDetails,
+    });
+  } catch (error) {
+    console.error("Error creating contest:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
+
+const getAllContests = async (req, res) => {
+  try {
+
+    const contests = await contestModel.find()
+      .sort({ createdAt: -1 })
+      .lean(); 
+
+    if (!contests || contests.length === 0) {
+      return res.status(404).json({ message: "No contests found" });
+    }
+
+    res.status(200).json({ success: true, contests });
+  } catch (error) {
+    console.error("Error fetching contests:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+
+
+const deleteContest = async (req, res) => {
+  const contestId = req.params.id;
+
+  try {
+    const contest = await contestModel.findByIdAndDelete(contestId);
+    await addNotification(req.userId, `Deleted contest (${contestId}).`);
+    if (!contest) {
+      return res.status(404).json({ message: "Contest not found" });
+    }
+
+    return res.status(200).json({
+      message: "Contest deleted successfully",
+      contestId,
+    });
+  } catch (error) {
+    console.error("Delete Contest Error:", error);
+    return res.status(500).json({
+      message: "Server error while deleting contest",
+      error: error.message,
+    });
+  }
+};
+
+
+
 module.exports = {
     uploadQuestion,
     deleteQuestion,
+    createContest,
+    getAllContests,
+    deleteContest,
+    generateContestQuestions,
     listAllQuestions,
     listAllUsers,
     generateAIQuestion,

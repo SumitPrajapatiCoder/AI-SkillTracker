@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const userModel = require("../models/userModel");
+const contestModel = require("../models/contestModel");
 const quizCardModel = require("../models/quizCardModel");
 const mockCardModel = require("../models/mockCardModel");
 const bcrypt = require("bcryptjs");
@@ -259,23 +260,28 @@ const generateStudyPlan = async (req, res) => {
 
 
             const prompt = `
-You are an expert programming tutor and mentor. Based on the following user's **quiz history in ${lang}**, create a **deep, personalized study plan**. 
+You are an expert programming tutor and mentor. Based on this user's quiz history in ${lang}, create a **deep, personalized study plan** that is fully actionable, readable, and motivating.
 
-**User Quiz History:**
+**Requirements for the study plan:**
+1. **Analyze Overall Performance:** Identify patterns, strengths, weaknesses, and common mistakes across all quizzes. Do NOT mention individual question numbers.
+2. **Readable Format:** Structure the plan with clear headers, subheaders, bullet points, and numbered lists.
+3. **Tables:** Include tables if useful to summarize key concepts, progress, or topic areas.
+4. **Actionable Steps:** Suggest exercises, mini-projects, coding challenges, and hands-on tasks for each topic.
+5. **Practical Learning:** Focus on learning by doing, not just theory. Include tips on avoiding common mistakes.
+6. **Daily & Weekly Routine:** Provide a structured study routine that the user can follow.
+7. **Resources:** Recommend books, websites, videos, coding platforms, and tools with clickable links.
+8. **Motivating Tone:** Write as if a personal mentor is guiding the user—friendly, encouraging, and supportive.
+9. **Code Examples:** Include short code snippets or examples where relevant.
+10. **HTML Format:** Format the entire output in HTML with proper headings (<h3>, <h4>), lists (<ul>, <ol>), tables (<table>), and links (<a>) so it can be rendered directly in a web page.
+
+**User Quiz History Summary:**
 ${historySummary}
 
-**Instructions:**
-- Analyze the user's answers to identify **patterns, weaknesses, and strengths**.
-- Suggest **topics to focus on** and **mistakes to avoid**.
-- Provide **actionable learning steps**, **mini-projects**, and **hands-on exercises** based on actual quiz questions.
-- Recommend **resources** (books, websites, videos, coding platforms) for each topic.
-- Include a **daily and weekly study routine**.
-- Use **bullet points, numbered lists, and headings** for clarity and readability.
-- Focus on **practical learning**, avoid percentages or generic labels like beginner/intermediate.
-- Output should feel like a **personal mentor has analyzed the quizzes and given a plan**.
-
-Goal: Produce an actionable, **bullet-point-based study planner** for ${lang} that is fully readable and motivating.
+Goal: Produce a **fully formatted, mentor-style HTML study plan** for ${lang} that is practical, interactive, and visually engaging. Use tables, lists, headers, exercises, and resources to make it easy to follow and actionable.
 `;
+
+
+
 
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
             const result = await model.generateContent([prompt]);
@@ -391,24 +397,30 @@ const generateRoadMap = async (req, res) => {
                 .join("\n");
 
             const prompt = `
-You are an expert programming mentor AI. Based on the following **quiz history in ${lang}**, create a **deep, personalized, confidence-building learning roadmap**.
+You are an expert programming mentor AI. Based on this user's quiz history in ${lang}, create a **deep, personalized, confidence-building learning roadmap** in **HTML format** that can be rendered directly on a webpage.
 
-**User Quiz History:**
+**Requirements for the roadmap:**
+1. **Analyze Performance:** Identify patterns, strengths, weaknesses, and common mistakes across all quizzes. Do NOT mention individual question numbers.
+2. **Phased Roadmap:** Structure the roadmap in phases or milestones, each with clear objectives, hands-on exercises, mini-projects, and practical tasks.
+3. **Readable & Structured:** Use HTML headings (<h3>, <h4>), lists (<ul>, <ol>), tables (<table>) where helpful, and links (<a>) for resources.
+4. **Daily & Weekly Routine:** Provide a structured, realistic study routine with suggested daily and weekly activities for consistent progress.
+5. **Practical Learning:** Focus on coding by doing—examples, challenges, mini-projects, and exercises rather than abstract theory.
+6. **Code Examples:** Include short, relevant code snippets to illustrate concepts or exercises.
+7. **Resources:** Suggest books, websites, platforms, videos, and communities with **clickable links** for deeper learning.
+8. **Motivating Tone:** Write as a personal mentor speaking directly to the learner—encouraging, supportive, and confidence-building.
+9. **Progress Tracking:** Include tables or checklists to help the learner track completed milestones and exercises.
+10. **Actionable Steps:** Each phase should have clear, practical, and achievable tasks that the learner can implement immediately.
+11. **Code Examples:** Include short code snippets or examples where relevant.
+12. **HTML Format:** Format the entire output in HTML with proper headings (<h3>, <h4>), lists (<ul>, <ol>), tables (<table>), and links (<a>) so it can be rendered directly in a web page.
+
+**User Quiz History Summary:**
 ${historySummary}
 
-**Instructions:**
-- Analyze patterns in the user's quiz attempts to identify **strengths, weaknesses, and common mistakes**.
-- Suggest **topics to focus on** based on actual quiz content.
-- Provide a **phased learning roadmap** with **milestones**, **hands-on exercises**, and **mini-projects**.
-- Include **resources**: books, videos, platforms, and communities with **clickable links**.
-- Give **daily and weekly study routines** for practical progress.
-- Provide **motivational guidance**: celebrate milestones, inspire curiosity and confidence.
-- Structure the roadmap with **bullet points, numbered lists, and headings**.
-- Avoid percentages, abstract levels, or generic labels. Focus on **practical, actionable steps**.
-- Make it feel like a personal mentor analyzed the quizzes and wrote the roadmap specifically for this learner.
-
-Goal: Output a readable, **bullet-point-based roadmap** that motivates and guides the learner in mastering ${lang}.
+Goal: Produce a **fully formatted, mentor-style HTML roadmap** for ${lang}, focusing on practical mastery, motivation, and clear progression. Use tables, lists, headings, exercises, routines, and resources to make the roadmap visually engaging and easy to follow.
 `;
+
+
+
 
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
             const result = await model.generateContent([prompt]);
@@ -565,6 +577,82 @@ const getCompletedMocks = async (req, res) => {
 };
 
 
+
+
+// const chatbotController = async (req, res) => {
+//     try {
+//         const userId = req.user.id;
+//         const { messages } = req.body;
+
+//         if (!messages || !Array.isArray(messages) || messages.length === 0) {
+//             return res.status(400).json({ success: false, message: "Messages are required" });
+//         }
+
+//         const userMessage = messages[messages.length - 1].text
+//             || messages[messages.length - 1].parts?.[0]?.text;
+
+//         const user = await userModel.findById(userId).select("chatHistory");
+//         const history = user?.chatHistory || [];
+
+//         const recentHistory = history.slice(-20);
+
+//         let conversationContext = "";
+//         recentHistory.forEach(msg => {
+//             const speaker = msg.role === "user" ? "User" : "Gemini";
+//             conversationContext += `${speaker}: ${msg.text}\n`;
+//         });
+
+//         const formattedPrompt = `
+// You are a professional assistant. 
+// This is the conversation so far:
+// ${conversationContext}
+
+// Now the user says: "${userMessage}"
+
+// Respond in a friendly, readable, and engaging way, like ChatGPT would. 
+// - Use **bold** for important terms
+// - Use short paragraphs for clarity
+// - Use bullet points or numbered lists
+// - Avoid markdown headings like ###
+// - Make it conversational and professional
+// - Keep it suitable for direct chat display (no raw markdown)
+// `;
+
+//         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+//         const result = await model.generateContent([{ text: formattedPrompt }]);
+//         const botResponse = result?.response?.text() || "No response from AI.";
+
+//         await userModel.findByIdAndUpdate(userId, {
+//             $push: {
+//                 chatHistory: {
+//                     $each: [
+//                         { role: "user", text: userMessage, time: new Date() },
+//                         { role: "bot", text: botResponse, time: new Date() },
+//                     ]
+//                 }
+//             }
+//         });
+
+//         return res.status(200).json({
+//             success: true,
+//             response: botResponse,
+//             timestamp: new Date().toISOString(),
+//         });
+
+//     } catch (error) {
+//         console.error("Chatbot Error:", error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Failed to get response from AI",
+//             error: error.message,
+//         });
+//     }
+// };
+
+
+
+
+
 const chatbotController = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -579,7 +667,6 @@ const chatbotController = async (req, res) => {
 
         const user = await userModel.findById(userId).select("chatHistory");
         const history = user?.chatHistory || [];
-
         const recentHistory = history.slice(-20);
 
         let conversationContext = "";
@@ -588,7 +675,47 @@ const chatbotController = async (req, res) => {
             conversationContext += `${speaker}: ${msg.text}\n`;
         });
 
-        const formattedPrompt = `
+        const siteKeywords = [
+            "ai-skilltracker",
+            "skilltracker",
+            "about your website",
+            "what does your website do",
+            "explain your platform",
+            "how skilltracker works",
+            "tell me about your site",
+            "learning platform",
+            "programming platform",
+            "skill tracker",
+            "ai skill tracker"
+        ];
+
+        const isAboutSite = siteKeywords.some(keyword =>
+            userMessage.toLowerCase().includes(keyword.toLowerCase())
+        );
+
+        let botResponse = "";
+
+        if (isAboutSite) {
+            botResponse = `Welcome to **SkillTracker**, an **AI-powered learning platform** built to help you master programming in a structured and personalized way!   
+
+Here’s what **SkillTracker** offers:  
+
+- **Interactive Quizzes & Mock Tests:** Practice programming with topic-wise quizzes and mock tests for languages like **Java**, **C**, and **C++**.  
+- **Certificates:** After completing mock tests, earn certificates to showcase your skills and progress.  
+- **AI-Powered Study Plans & Roadmaps:** Based on your quiz performance and chosen language, SkillTracker automatically generates **personalized study plans and learning roadmaps** to guide your journey.  
+- **Built-in AI Chatbot:** Chat with our integrated AI assistant to solve coding problems, clear doubts, or get quick explanations.  
+- **User Progress Tracking:** View your detailed progress, check quiz history, and track which mocks are completed or pending.  
+
+**Technology Stack:**  
+- **Frontend:** HTML, CSS, React.js (Vite)  
+- **Backend:** Node.js, Express.js, JavaScript  
+- **Database:** MongoDB  
+
+In short, **SkillTracker** combines AI-driven learning, progress tracking, and interactive practice to make coding education smarter, personalized, and results-driven. `;
+        
+} else {
+
+            const formattedPrompt = `
 You are a professional assistant. 
 This is the conversation so far:
 ${conversationContext}
@@ -604,9 +731,10 @@ Respond in a friendly, readable, and engaging way, like ChatGPT would.
 - Keep it suitable for direct chat display (no raw markdown)
 `;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-        const result = await model.generateContent([{ text: formattedPrompt }]);
-        const botResponse = result?.response?.text() || "No response from AI.";
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+            const result = await model.generateContent([{ text: formattedPrompt }]);
+            botResponse = result?.response?.text() || "No response from AI.";
+        }
 
         await userModel.findByIdAndUpdate(userId, {
             $push: {
@@ -634,6 +762,8 @@ Respond in a friendly, readable, and engaging way, like ChatGPT would.
         });
     }
 };
+
+
 
 const getChatHistory = async (req, res) => {
     try {
@@ -766,6 +896,46 @@ const deleteAllNotifications = async (req, res) => {
     }
 };
 
+
+
+const getContestForUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const contest = await contestModel.findById(id);
+
+        if (!contest) return res.status(404).json({ message: "Contest not found" });
+
+        const now = new Date();
+        const publishTime = new Date(contest.publishDetails.date);
+
+        if (now < publishTime) {
+            return res.status(403).json({
+                success: false,
+                message: `Contest will unlock at ${contest.publishDetails.formatted}`,
+                unlockTime: contest.publishDetails.date,
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            contest: {
+                _id: contest._id,
+                questionSize: contest.questionSize,
+                timeDuration: contest.timeDuration,
+                publishDetails: contest.publishDetails,
+                questions: contest.questions.map(q => ({
+                    question: q.question,
+                    options: q.options,
+                    language: q.language,
+                    difficulty: q.difficulty,
+                })),
+            },
+        });
+    } catch (error) {
+        console.error("Error fetching contest for user:", error);
+        res.status(500).json({ message: "Server error", error });
+    }
+};
 
 module.exports = {
     loginController, registerController, getUserInfo, updateProfileController, chatbotController, getChatHistory,clearChatHistory,

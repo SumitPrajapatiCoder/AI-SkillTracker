@@ -3,9 +3,9 @@ const router = express.Router();
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 const {
-    uploadQuestion,blockUser,unblockUser,deleteUser,deleteLanguage,
-    deleteQuestion, toggleAdminRole, deleteCard, updateCard,
-    listAllQuestions, addCardDetails, getQuizCardDetails, getMockCardDetails,
+    uploadQuestion,blockUser,unblockUser,deleteUser,deleteLanguage,generateContestQuestions,
+    deleteQuestion, toggleAdminRole, deleteCard, updateCard,createContest,getAllContests,
+    listAllQuestions, addCardDetails, getQuizCardDetails, getMockCardDetails,deleteContest,
     listAllUsers, generateAIQuestion, editQuestion, uploadLanguage, getLanguages
 } = require("../controller/adminControl");
 
@@ -32,4 +32,12 @@ router.get("/get-mock-cards", authMiddleware, adminMiddleware, getMockCardDetail
 router.delete("/delete-card/:id", authMiddleware, adminMiddleware, deleteCard);
 router.put("/update-card/:id", authMiddleware, adminMiddleware, updateCard);
 
+
+router.post("/createContest", authMiddleware, adminMiddleware, createContest);
+router.get("/getAllContests", authMiddleware, adminMiddleware, getAllContests);
+router.post("/generateContestQuestions", authMiddleware, adminMiddleware, generateContestQuestions);
+router.delete("/deleteContest/:id", authMiddleware, adminMiddleware, deleteContest);
+
 module.exports = router;
+
+

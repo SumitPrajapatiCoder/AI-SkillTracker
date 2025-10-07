@@ -21,6 +21,9 @@ import UploadCardDetails from "./pages/admin/uploadCardDetails";
 import ListCardDetails from "./pages/admin/listCardDetails";
 import Chatbot from "./pages/chatbot";
 import Notification from "./pages/notification";
+import Contest from "./pages/contest";
+import ContestUpload from "./pages/admin/uploadContest";
+import ContestView from "./pages/admin/viewContestDetails";
 import "react-toastify/dist/ReactToastify.css";
 
 
@@ -40,11 +43,41 @@ function App() {
           }
         />
         <Route
+          path="/contest"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Contest />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/notification"
           element={
             <ProtectedRoute>
               <Layout>
                 <Notification />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/upload-contest"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ContestUpload />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/view-contest"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ContestView />
               </Layout>
             </ProtectedRoute>
           }
