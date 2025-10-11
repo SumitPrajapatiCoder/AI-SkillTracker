@@ -327,7 +327,6 @@ const deleteLanguage = async (req, res) => {
 };
 
 
-
 const listAllUsers = async (req, res) => {
     try {
         const users = await userModel.find().select("-password");
@@ -337,6 +336,23 @@ const listAllUsers = async (req, res) => {
         res.status(500).send({ success: false, message: "Failed to fetch users" });
     }
 };
+
+const userDetailsById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await userModel.findById(id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    console.error("User details error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch user details" });
+  }
+};
+
 
 
 const blockUser = async (req, res) => {
@@ -636,7 +652,6 @@ const createContest = async (req, res) => {
 };
 
 
-
 const getAllContests = async (req, res) => {
   try {
 
@@ -692,7 +707,7 @@ module.exports = {
     listAllQuestions,
     listAllUsers,
     generateAIQuestion,
-    editQuestion,
+    editQuestion,userDetailsById,
     blockUser,unblockUser,deleteUser,toggleAdminRole,deleteLanguage,
   uploadLanguage,getLanguages,addCardDetails,getQuizCardDetails,getMockCardDetails,deleteCard,updateCard
 };

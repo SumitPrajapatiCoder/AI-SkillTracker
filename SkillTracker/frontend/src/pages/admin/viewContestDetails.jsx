@@ -82,11 +82,12 @@ const ContestView = () => {
             {contests.map((contest, idx) => (
                 <div key={idx} className="contest-card">
                     <div className="contest-header">
-                        <p><strong>Contest No. {contests.length - idx}</strong></p>
-                        <p><strong>Question Size:</strong> {contest.questionSize}</p>
-                        <p><strong>Time Duration:</strong> {contest.timeDuration} minutes</p>
-                        <p><strong>Publish Date & Time:</strong> {contest.publishDetails.formatted}</p>
+                        <p className="contest-no"><strong>Contest No. {contest._id.slice(-5)}</strong></p>
+                        <p className="question-size"><strong>Question Size:</strong> {contest.questionSize}</p>
+                        <p className="time-duration"><strong>Time Duration:</strong> {contest.timeDuration} minutes</p>
+                        <p className="publish-date"><strong>Published Date & Time:</strong> {contest.publishDetails.formatted}</p>
                     </div>
+
 
 
                     <h3>Questions:</h3>

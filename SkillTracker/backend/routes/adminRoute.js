@@ -6,7 +6,7 @@ const {
     uploadQuestion,blockUser,unblockUser,deleteUser,deleteLanguage,generateContestQuestions,
     deleteQuestion, toggleAdminRole, deleteCard, updateCard,createContest,getAllContests,
     listAllQuestions, addCardDetails, getQuizCardDetails, getMockCardDetails,deleteContest,
-    listAllUsers, generateAIQuestion, editQuestion, uploadLanguage, getLanguages
+    listAllUsers, generateAIQuestion, editQuestion, uploadLanguage, getLanguages,userDetailsById
 } = require("../controller/adminControl");
 
 
@@ -19,6 +19,7 @@ router.post("/generate-ai", authMiddleware, adminMiddleware, generateAIQuestion)
 router.delete("/delete-question/:id", authMiddleware, adminMiddleware, deleteQuestion);
 router.get("/all-questions", authMiddleware, adminMiddleware, listAllQuestions);
 router.get("/all-users", authMiddleware, adminMiddleware, listAllUsers);
+router.get("/user/:id", authMiddleware, adminMiddleware, userDetailsById);
 router.put("/block-user/:id", authMiddleware, adminMiddleware, blockUser);
 router.put("/unblock-user/:id", authMiddleware, adminMiddleware, unblockUser);
 router.put("/toggle-admin/:id", authMiddleware, adminMiddleware, toggleAdminRole);

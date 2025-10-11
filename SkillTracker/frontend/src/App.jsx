@@ -16,12 +16,14 @@ import MockLanguage from "./pages/mockLanguage";
 import { ToastContainer } from "react-toastify";
 import UploadQuestion from "./pages/admin/uploadQuestion";
 import UserList from "./pages/admin/userList";
+import UserDetails from "./pages/admin/userDetail";
 import AllQuestion from "./pages/admin/questionList";
 import UploadCardDetails from "./pages/admin/uploadCardDetails";
 import ListCardDetails from "./pages/admin/listCardDetails";
 import Chatbot from "./pages/chatbot";
 import Notification from "./pages/notification";
 import Contest from "./pages/contest";
+import ContestList from "./pages/contestList";
 import ContestUpload from "./pages/admin/uploadContest";
 import ContestView from "./pages/admin/viewContestDetails";
 import "react-toastify/dist/ReactToastify.css";
@@ -43,11 +45,21 @@ function App() {
           }
         />
         <Route
-          path="/contest"
+          path="/contest/:id"
           element={
             <ProtectedRoute>
               <Layout>
                 <Contest />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/contestList"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ContestList />
               </Layout>
             </ProtectedRoute>
           }
@@ -118,6 +130,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <UserList />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/user/:id"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <UserDetails />
               </Layout>
             </ProtectedRoute>
           }

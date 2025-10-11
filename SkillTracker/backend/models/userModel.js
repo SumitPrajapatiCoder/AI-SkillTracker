@@ -21,6 +21,21 @@ const notificationSchema = new mongoose.Schema({
     date: { type: Date, default: Date.now },
 });
 
+const contestHistorySchema = new mongoose.Schema({
+    contestId: { type: mongoose.Schema.Types.ObjectId, ref: "contest" },
+    score: Number,
+    totalQuestions: Number,
+    date: { type: Date, default: Date.now },
+    playedQuestions: [
+        {
+            question: String,
+            options: [String],
+            correctAnswer: String,
+            selectedAnswer: String,
+        },
+    ],
+});
+
 const userSchema = new mongoose.Schema(
     {
         name: {
@@ -60,6 +75,7 @@ const userSchema = new mongoose.Schema(
                 date: { type: Date },
             },
         ],
+        contestHistory: [contestHistorySchema],
         studyPlans: {
             type: Map,
             of: String,

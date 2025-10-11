@@ -51,7 +51,7 @@ const Header = () => {
 
   useEffect(() => {
     fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 1000);
+    const interval = setInterval(fetchNotificationCount, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -157,9 +157,9 @@ const Header = () => {
       </Link>
 
       <Link
-        to="/contest"
+        to="/contestList"
         onClick={handleLinkClick}
-        className={isActive("/contest") ? "active-link" : ""}
+        className={isActive("/contestList") ? "active-link" : ""}
       >
         Contest
       </Link>

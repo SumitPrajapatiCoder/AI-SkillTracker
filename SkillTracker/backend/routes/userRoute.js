@@ -2,7 +2,8 @@ const express = require("express");
 const { loginController, registerController,getUserInfo,generateRoadMap,getStudyPlans,saveStudyPlan,deleteNotification,
     getRoadmaps, saveRoadmap, getLanguages, getMockCardDetails, getQuizCardDetails,getCompletedMocks,clearChatHistory,
 updateProfileController,saveMockResult,getMockStatus,saveQuizResult,generateStudyPlan,chatbotController,getChatHistory,
-getUserProgress,getNotifications,markAsRead,deleteAllNotifications} = require("../controller/userControl");
+getUserProgress,getNotifications,markAsRead,deleteAllNotifications,
+getAllContests,getContestUser,submitContest} = require("../controller/userControl");
 const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -43,6 +44,10 @@ router.get("/notifications", authMiddleware, getNotifications);
 router.post("/notifications/read", authMiddleware, markAsRead);
 router.delete("/notifications/:notificationId", authMiddleware, deleteNotification);
 router.delete("/notification/all", authMiddleware, deleteAllNotifications);
+
+router.get("/contestAll", authMiddleware, getAllContests);
+router.get("/contest/:id", authMiddleware, getContestUser);
+router.post("/contestSubmit", authMiddleware, submitContest);
 
 
 module.exports = router;

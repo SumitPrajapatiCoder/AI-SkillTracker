@@ -5,12 +5,14 @@ import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import { Table, Button, Tag, Space, Input } from "antd";
+import { useNavigate } from "react-router-dom";
 import {
   DeleteOutlined,
   StopOutlined,
   CheckOutlined,
   UserAddOutlined,
   UserDeleteOutlined,
+  InfoCircleOutlined
 } from "@ant-design/icons";
 
 const MySwal = withReactContent(Swal);
@@ -20,6 +22,7 @@ const AdminUserList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const navigate = useNavigate();
 
   const fetchUsers = async () => {
     try {
@@ -183,6 +186,14 @@ const AdminUserList = () => {
           >
             Delete
           </Button>
+          <Button
+            type="dashed"
+            icon={<InfoCircleOutlined />}
+            onClick={() => navigate(`/user/${record._id}`)}
+          >
+            Info
+          </Button>
+
         </Space>
       ),
     }

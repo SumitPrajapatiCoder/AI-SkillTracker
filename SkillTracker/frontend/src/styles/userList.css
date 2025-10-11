@@ -1,4 +1,4 @@
-.admin-user-list {
+/* .admin-user-list {
   padding: 20px;
   background: linear-gradient(to bottom right, #f9fafb, #eef2ff);
   min-height: 100vh;
@@ -167,4 +167,64 @@
   .ant-table-pagination {
     margin-top: 10px !important;
   }
+} */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.admin-user-list {
+  padding: 20px;
+  background-color: #f0f2f5;
 }
+
+.page-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.search-bar-wrapper {
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 300px;
+}
+
+.user-table .ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: bold;
+}
+
+.user-info-modal {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.user-history-collapse .history-item {
+  background: #fafafa;
+  padding: 8px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+}
+

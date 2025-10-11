@@ -329,6 +329,7 @@ const getStudyPlans = async (req, res) => {
     try {
         const userId = req.userId;
         const user = await userModel.findById(userId).select("studyPlans");
+        
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
         return res.status(200).json({ success: true, studyPlansByLanguage: user.studyPlans || {} });
@@ -897,13 +898,14 @@ const deleteAllNotifications = async (req, res) => {
 };
 
 
-
-const getContestForUser = async (req, res) => {
+const getContestUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const contest = await contestModel.findById(id);
 
-        if (!contest) return res.status(404).json({ message: "Contest not found" });
+        const contest = await contestModel.findById(id).lean();
+
+        if (!contest)
+            return res.status(404).json({ message: "Contest not found" });
 
         const now = new Date();
         const publishTime = new Date(contest.publishDetails.date);
@@ -918,18 +920,7 @@ const getContestForUser = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            contest: {
-                _id: contest._id,
-                questionSize: contest.questionSize,
-                timeDuration: contest.timeDuration,
-                publishDetails: contest.publishDetails,
-                questions: contest.questions.map(q => ({
-                    question: q.question,
-                    options: q.options,
-                    language: q.language,
-                    difficulty: q.difficulty,
-                })),
-            },
+            contest
         });
     } catch (error) {
         console.error("Error fetching contest for user:", error);
@@ -937,8 +928,49 @@ const getContestForUser = async (req, res) => {
     }
 };
 
+
+const submitContest = async (req, res) => {
+    try {
+        const { contestId, score, totalQuestions, playedQuestions } = req.body;
+        const userId = req.user.id;
+
+        await userModel.findByIdAndUpdate(userId, {
+            $push: {
+                contestHistory: {
+                    contestId,
+                    score,
+                    totalQuestions,
+                    playedQuestions,
+                },
+            },
+        });
+
+        res
+            .status(200)
+            .json({ success: true, message: `Contest ID ${contestId} submitted successfully` });
+    } catch (error) {
+        console.error("Error submitting contest:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+
+
+const getAllContests = async (req, res) => {
+    try {
+        const contests = await contestModel.find().sort({ createdAt: -1 });
+        res.status(200).json({ success: true, contests });
+    } catch (error) {
+        console.error("Error fetching contests:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+
+
 module.exports = {
     loginController, registerController, getUserInfo, updateProfileController, chatbotController, getChatHistory,clearChatHistory,
     getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,getLanguages,getCompletedMocks,
     saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,getMockCardDetails,getQuizCardDetails,
-    addNotification,getNotifications,markAsRead,deleteNotification,deleteAllNotifications };
+    addNotification,getNotifications,markAsRead,deleteNotification,deleteAllNotifications,getContestUser,submitContest,getAllContests
+ };
