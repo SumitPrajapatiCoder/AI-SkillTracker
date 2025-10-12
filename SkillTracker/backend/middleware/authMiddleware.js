@@ -30,7 +30,7 @@ module.exports = async (req, res, next) => {
             req.body = req.body || {};
             req.body.userId = decode.id;
             req.userId = decode.id;
-            req.user = user;
+            req.user = user; 
             
             next();
         });

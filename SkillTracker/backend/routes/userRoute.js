@@ -2,9 +2,11 @@ const express = require("express");
 const { loginController, registerController,getUserInfo,generateRoadMap,getStudyPlans,saveStudyPlan,deleteNotification,
     getRoadmaps, saveRoadmap, getLanguages, getMockCardDetails, getQuizCardDetails,getCompletedMocks,clearChatHistory,
 updateProfileController,saveMockResult,getMockStatus,saveQuizResult,generateStudyPlan,chatbotController,getChatHistory,
-getUserProgress,getNotifications,markAsRead,deleteAllNotifications,
-getAllContests,getContestUser,submitContest} = require("../controller/userControl");
+    getUserProgress, getNotifications, markAsRead, deleteAllNotifications, uploadProfileImageController, deleteProfileImageController,
+    getAllContests, getContestUser, submitContest, getGlobalLeaderboard } = require("../controller/userControl");
 const authMiddleware = require("../middleware/authMiddleware");
+const { upload } = require("../config/cloudinary");
+
 
 const router = express.Router();
 
@@ -12,6 +14,8 @@ router.post("/login", loginController);
 router.post("/register", registerController);
 router.post('/get_User_data', authMiddleware, getUserInfo);
 router.put('/update_profile', authMiddleware, updateProfileController);
+router.put("/upload_profile_image",authMiddleware,upload.single("image"),uploadProfileImageController);
+router.delete("/delete_profile_image", authMiddleware, deleteProfileImageController);
 
 
 router.get("/get-languages", authMiddleware, getLanguages);
@@ -48,6 +52,6 @@ router.delete("/notification/all", authMiddleware, deleteAllNotifications);
 router.get("/contestAll", authMiddleware, getAllContests);
 router.get("/contest/:id", authMiddleware, getContestUser);
 router.post("/contestSubmit", authMiddleware, submitContest);
-
+router.get("/leaderboard/global", authMiddleware, getGlobalLeaderboard);
 
 module.exports = router;

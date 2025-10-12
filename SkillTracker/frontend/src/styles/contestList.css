@@ -164,3 +164,86 @@
     font-size: 1rem;
   }
 }
+
+
+.global-leaderboard {
+  margin-top: 50px;
+  background: #1f2937;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  color: #fff;
+}
+
+.global-leaderboard h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.6rem;
+  color: #00e6b8;
+}
+
+.global-leaderboard table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.global-leaderboard th,
+.global-leaderboard td {
+  padding: 12px 15px;
+  text-align: left;
+}
+
+.global-leaderboard th {
+  background-color: #111827;
+  color: #60a5fa;
+  font-weight: 600;
+  border-bottom: 2px solid #374151;
+}
+
+.global-leaderboard tbody tr {
+  background-color: #2d3748;
+  transition: background 0.3s, transform 0.2s;
+  cursor: default;
+}
+
+.global-leaderboard tbody tr:hover {
+  background-color: #374151;
+  transform: translateY(-2px);
+}
+
+.global-leaderboard tbody td {
+  border-bottom: 1px solid #1f2937;
+  color: #e5e7eb;
+}
+
+.global-leaderboard tbody tr:nth-child(odd) {
+  background-color: #2f3848;
+}
+
+.global-leaderboard tbody tr:first-child td {
+  font-weight: bold;
+  color: #facc15;
+}
+
+@media (max-width: 768px) {
+  .global-leaderboard table {
+    font-size: 0.85rem;
+  }
+
+  .global-leaderboard th,
+  .global-leaderboard td {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .global-leaderboard table {
+    font-size: 0.8rem;
+  }
+
+  .global-leaderboard th,
+  .global-leaderboard td {
+    padding: 8px;
+  }
+}

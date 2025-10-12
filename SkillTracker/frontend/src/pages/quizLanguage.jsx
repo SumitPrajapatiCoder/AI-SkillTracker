@@ -62,6 +62,7 @@ const QuizLanguage = () => {
       return () => clearInterval(intervalRef.current);
     }
   }, [timer, completed, questions]);
+  
 
   useEffect(() => {
     const submitQuiz = async () => {
@@ -88,6 +89,17 @@ const QuizLanguage = () => {
           { language, correct: finalScore, total: questions.length, playedQuestions },
           { headers: { Authorization: `Bearer ${token}` } }
         );
+
+        const completedQuizzes =
+          JSON.parse(localStorage.getItem("completedQuizzes")) || [];
+        if (!completedQuizzes.includes(language)) {
+          completedQuizzes.push(language);
+          localStorage.setItem(
+            "completedQuizzes",
+            JSON.stringify(completedQuizzes)
+          );
+        }
+        
         toast.success("Quiz submitted!");
       } catch (err) {
         toast.error("Failed to save result");

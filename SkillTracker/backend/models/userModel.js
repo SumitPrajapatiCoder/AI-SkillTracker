@@ -25,6 +25,10 @@ const contestHistorySchema = new mongoose.Schema({
     contestId: { type: mongoose.Schema.Types.ObjectId, ref: "contest" },
     score: Number,
     totalQuestions: Number,
+    submissionType: {
+        type: String,
+        enum: ["valid", "not valid"],
+    },
     date: { type: Date, default: Date.now },
     playedQuestions: [
         {
@@ -58,8 +62,12 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
-        quizHistory: [quizHistorySchema],
+        profileImage: {
+            type: String, 
+            default: "",  
+        },
 
+        quizHistory: [quizHistorySchema],
         mockHistory: [
             {
                 language: String,

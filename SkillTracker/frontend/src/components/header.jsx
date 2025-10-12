@@ -5,6 +5,8 @@ import axios from "axios";
 import { FaBars, FaTimes, FaChevronDown, FaChevronUp, FaBell } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import defaultAvatar from "../assets/default-avatar.png";
+
 
 const Header = () => {
   const [user, setUser] = useState(null);
@@ -258,8 +260,24 @@ const Header = () => {
       </div>
 
       <div className="right">
-        {user && <span className="username">{user.name}</span>}
+        {user && (
+          <>
+            {user.profileImage ? (
+              <img src={user.profileImage} alt="Profile" className="profile-img-small" />
+            ) : (
+                <img
+                  src={user.profileImage || defaultAvatar}
+                  alt="Profile"
+                  className="profile-img-small"
+                />
+
+            )}
+            <span className="username">{user.name}</span>
+          </>
+        )}
       </div>
+
+
 
       {isMobile && showDropdown && (
         <nav className="menu mobile-menu">{MenuLinks()}</nav>

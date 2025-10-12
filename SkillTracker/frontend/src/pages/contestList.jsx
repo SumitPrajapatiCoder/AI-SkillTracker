@@ -6,6 +6,7 @@ import "../styles/contestList.css";
 
 const ContestList = () => {
     const [contests, setContests] = useState([]);
+    const [leaderboard, setLeaderboard] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const navigate = useNavigate();
@@ -14,13 +15,17 @@ const ContestList = () => {
         const fetchContests = async () => {
             try {
                 const token = localStorage.getItem("token");
-                const res = await axios.get("/api/v1/user/contestAll", {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                setContests(res.data.contests || []);
+
+                const [contestsRes, leaderboardRes] = await Promise.all([
+                    axios.get("/api/v1/user/contestAll", { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get("/api/v1/user/leaderboard/global", { headers: { Authorization: `Bearer ${token}` } }),
+                ]);
+
+                setContests(contestsRes.data.contests || []);
+                setLeaderboard(leaderboardRes.data.leaderboard || []);
             } catch (err) {
                 console.error(err);
-                setError("Failed to load contests");
+                setError("Failed to load contests or leaderboard");
             } finally {
                 setLoading(false);
             }
@@ -86,6 +91,29 @@ const ContestList = () => {
                     );
                 })}
             </div>
+
+            {/* Global Leaderboard */}
+            <section className="global-leaderboard">
+                <h2>Global Leaderboard</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Candidate Name</th>
+                            <th>Total Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {leaderboard.map((user, index) => (
+                            <tr key={user.userId}>
+                                <td>{index + 1}</td>
+                                <td>{user.name}</td>
+                                <td>{user.totalScore}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </section>
         </section>
     );
 };

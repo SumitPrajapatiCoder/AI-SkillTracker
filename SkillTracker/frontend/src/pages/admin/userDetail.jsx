@@ -45,6 +45,8 @@ const UserDetails = () => {
                 <Descriptions.Item label="Email">{user.email}</Descriptions.Item>
                 <Descriptions.Item label="Role">{user.isAdmin ? "Admin" : "User"}</Descriptions.Item>
                 <Descriptions.Item label="Status">{user.isBlocked ? "Blocked" : "Active"}</Descriptions.Item>
+                <Descriptions.Item label="Profile Image URL">{user.profileImage}</Descriptions.Item>
+                <Descriptions.Item label="Profile Image"><img src={user.profileImage} /></Descriptions.Item>
                 <Descriptions.Item label="Created At">{new Date(user.createdAt).toLocaleString()}</Descriptions.Item>
                 <Descriptions.Item label="Updated At">{new Date(user.updatedAt).toLocaleString()}</Descriptions.Item>
             </Descriptions>
@@ -167,6 +169,9 @@ const UserDetails = () => {
                                 <p>
                                     <strong>Date:</strong> {new Date(contest.date).toLocaleString()}
                                 </p>
+                                <p>
+                                    <strong>Submission Type:</strong> {contest.submissionType?.toUpperCase() || "N/A"} 
+                                </p>
                                 <Collapse>
                                     <Panel header="Played Questions" key="playedQuestions">
                                         {contest.playedQuestions.length === 0 ? (
@@ -188,6 +193,7 @@ const UserDetails = () => {
                                                                 <strong>Correct Answer:</strong> {q.correctAnswer} |{" "}
                                                                 <strong>Selected Answer:</strong> {q.selectedAnswer}
                                                             </p>
+                                                            
                                                         </div>
                                                     </List.Item>
                                                 )}

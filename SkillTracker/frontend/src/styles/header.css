@@ -55,6 +55,35 @@
 }
 .username:hover { color: #60a5fa; transform: scale(1.05); }
 
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 10px; 
+}
+
+.profile-img-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder-small {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #aaa;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+
+
 .notification-link {
   position: relative;
   display: inline-flex;

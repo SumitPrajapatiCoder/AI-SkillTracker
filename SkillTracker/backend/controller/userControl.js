@@ -7,6 +7,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const { cloudinary } = require("../config/cloudinary");
+
 
 
 const registerController = async (req, res) => {
@@ -97,16 +99,19 @@ const getUserInfo = async (req, res) => {
 const updateProfileController = async (req, res) => {
     try {
         const userId = req.userId;
-
         const { name, email } = req.body;
 
         if (!name || !email) {
-            return res.status(400).send({ success: false, message: "Name and Email are required" });
+            return res
+                .status(400)
+                .send({ success: false, message: "Name and Email are required" });
         }
 
         const user = await userModel.findById(userId);
         if (!user) {
-            return res.status(404).send({ success: false, message: "User not found" });
+            return res
+                .status(404)
+                .send({ success: false, message: "User not found" });
         }
 
         user.name = name;
@@ -122,6 +127,92 @@ const updateProfileController = async (req, res) => {
         });
     } catch (error) {
         console.error("Update Profile Error:", error);
+        res
+            .status(500)
+            .send({ success: false, message: "Internal Server Error" });
+    }
+};
+
+
+const uploadProfileImageController = async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        if (!req.file || !req.file.path) {
+            return res
+                .status(400)
+                .send({ success: false, message: "No image uploaded" });
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res
+                .status(404)
+                .send({ success: false, message: "User not found" });
+        }
+
+        if (user.profileImage && user.profileImage.includes("cloudinary.com")) {
+            try {
+                const publicId = user.profileImage
+                    .split("/")
+                    .pop()
+                    .split(".")[0];
+                await cloudinary.uploader.destroy(`user_profiles/${publicId}`);
+            } catch (err) {
+                console.warn("Old image cleanup failed:", err.message);
+            }
+        }
+
+        user.profileImage = req.file.path;
+        await user.save();
+
+        const updatedUser = await userModel.findById(userId).select("-password");
+
+        res.status(200).send({
+            success: true,
+            message: "Profile photo updated successfully",
+            data: updatedUser,
+        });
+    } catch (error) {
+        console.error("Upload Image Error:", error);
+        res
+            .status(500)
+            .send({ success: false, message: "Internal Server Error" });
+    }
+};
+
+
+
+const deleteProfileImageController = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).send({ success: false, message: "User not found" });
+        }
+
+        if (user.profileImage && user.profileImage.includes("cloudinary.com")) {
+            try {
+                const parts = user.profileImage.split("/");
+                const fileName = parts[parts.length - 1].split(".")[0]; 
+                await cloudinary.uploader.destroy(`user_profiles/${fileName}`);
+            } catch (err) {
+                console.warn("Failed to delete old image from Cloudinary:", err.message);
+            }
+        }
+
+        user.profileImage = "";
+        await user.save();
+
+        const updatedUser = await userModel.findById(userId).select("-password");
+
+        res.status(200).send({
+            success: true,
+            message: "Profile image deleted successfully",
+            data: updatedUser,
+        });
+    } catch (error) {
+        console.error("Delete Profile Image Error:", error);
         res.status(500).send({ success: false, message: "Internal Server Error" });
     }
 };
@@ -158,7 +249,6 @@ const saveQuizResult = async (req, res) => {
             .json({ success: false, message: "Failed to save quiz result" });
     }
 };
-
 
 
 const saveMockResult = async (req, res) => {
@@ -279,9 +369,6 @@ ${historySummary}
 
 Goal: Produce a **fully formatted, mentor-style HTML study plan** for ${lang} that is practical, interactive, and visually engaging. Use tables, lists, headers, exercises, and resources to make it easy to follow and actionable.
 `;
-
-
-
 
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
             const result = await model.generateContent([prompt]);
@@ -407,7 +494,7 @@ You are an expert programming mentor AI. Based on this user's quiz history in ${
 4. **Daily & Weekly Routine:** Provide a structured, realistic study routine with suggested daily and weekly activities for consistent progress.
 5. **Practical Learning:** Focus on coding by doing—examples, challenges, mini-projects, and exercises rather than abstract theory.
 6. **Code Examples:** Include short, relevant code snippets to illustrate concepts or exercises.
-7. **Resources:** Suggest books, websites, platforms, videos, and communities with **clickable links** for deeper learning.
+7. **Resources:** Suggest books, websites, platforms, videos, and communities with **clickable links** for deeper learning, including professional and networking platforms like **LinkedIn**, **GitHub**, **Stack Overflow**, **LeetCode**, and other relevant communities.
 8. **Motivating Tone:** Write as a personal mentor speaking directly to the learner—encouraging, supportive, and confidence-building.
 9. **Progress Tracking:** Include tables or checklists to help the learner track completed milestones and exercises.
 10. **Actionable Steps:** Each phase should have clear, practical, and achievable tasks that the learner can implement immediately.
@@ -556,7 +643,6 @@ const getMockCardDetails = async (req, res) => {
     const mockCards = await mockCardModel.find().sort({ createdAt: -1 });
     return res.status(200).json({ success: true, data: mockCards });
   } catch (error) {
-    console.error("Get Mock Cards Error:", error);
     return res.status(500).json({
       error: "Failed to fetch mock cards",
       details: error.message,
@@ -572,85 +658,9 @@ const getCompletedMocks = async (req, res) => {
 
         res.json({ success: true, data: user.completedMocks });
     } catch (error) {
-        console.error("getCompletedMocks error:", error);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
-
-
-
-
-// const chatbotController = async (req, res) => {
-//     try {
-//         const userId = req.user.id;
-//         const { messages } = req.body;
-
-//         if (!messages || !Array.isArray(messages) || messages.length === 0) {
-//             return res.status(400).json({ success: false, message: "Messages are required" });
-//         }
-
-//         const userMessage = messages[messages.length - 1].text
-//             || messages[messages.length - 1].parts?.[0]?.text;
-
-//         const user = await userModel.findById(userId).select("chatHistory");
-//         const history = user?.chatHistory || [];
-
-//         const recentHistory = history.slice(-20);
-
-//         let conversationContext = "";
-//         recentHistory.forEach(msg => {
-//             const speaker = msg.role === "user" ? "User" : "Gemini";
-//             conversationContext += `${speaker}: ${msg.text}\n`;
-//         });
-
-//         const formattedPrompt = `
-// You are a professional assistant. 
-// This is the conversation so far:
-// ${conversationContext}
-
-// Now the user says: "${userMessage}"
-
-// Respond in a friendly, readable, and engaging way, like ChatGPT would. 
-// - Use **bold** for important terms
-// - Use short paragraphs for clarity
-// - Use bullet points or numbered lists
-// - Avoid markdown headings like ###
-// - Make it conversational and professional
-// - Keep it suitable for direct chat display (no raw markdown)
-// `;
-
-//         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-//         const result = await model.generateContent([{ text: formattedPrompt }]);
-//         const botResponse = result?.response?.text() || "No response from AI.";
-
-//         await userModel.findByIdAndUpdate(userId, {
-//             $push: {
-//                 chatHistory: {
-//                     $each: [
-//                         { role: "user", text: userMessage, time: new Date() },
-//                         { role: "bot", text: botResponse, time: new Date() },
-//                     ]
-//                 }
-//             }
-//         });
-
-//         return res.status(200).json({
-//             success: true,
-//             response: botResponse,
-//             timestamp: new Date().toISOString(),
-//         });
-
-//     } catch (error) {
-//         console.error("Chatbot Error:", error);
-//         return res.status(500).json({
-//             success: false,
-//             message: "Failed to get response from AI",
-//             error: error.message,
-//         });
-//     }
-// };
-
-
 
 
 
@@ -725,7 +735,8 @@ Now the user says: "${userMessage}"
 
 Respond in a friendly, readable, and engaging way, like ChatGPT would. 
 - Use **bold** for important terms
-- Use short paragraphs for clarity
+- Use short paragraimport StudyPlan from './../../frontend/src/pages/study_plane';
+phs for clarity
 - Use bullet points or numbered lists
 - Avoid markdown headings like ###
 - Make it conversational and professional
@@ -934,6 +945,16 @@ const submitContest = async (req, res) => {
         const { contestId, score, totalQuestions, playedQuestions } = req.body;
         const userId = req.user.id;
 
+        const contest = await contestModel.findById(contestId).lean();
+        if (!contest) return res.status(404).json({ message: "Contest not found" });
+
+        const now = new Date();
+        const publishTime = new Date(contest.publishDetails.date);
+        const durationMinutes = contest.timeDuration; 
+        const endTime = new Date(publishTime.getTime() + durationMinutes * 60000); 
+
+        const submissionType = now >= publishTime && now <= endTime ? "valid" : "not valid";
+
         await userModel.findByIdAndUpdate(userId, {
             $push: {
                 contestHistory: {
@@ -941,16 +962,73 @@ const submitContest = async (req, res) => {
                     score,
                     totalQuestions,
                     playedQuestions,
+                    date: new Date(),
+                    submissionType,
                 },
             },
         });
+        
+        const message =
+            submissionType === "valid"
+                ? `Your submission for Contest ${contestId} was successful and is ${submissionType}.`
+                : `Your submission for Contest ${contestId} was submitted but is ${submissionType}.`;
 
-        res
-            .status(200)
-            .json({ success: true, message: `Contest ID ${contestId} submitted successfully` });
+        await addNotification(userId, message);
+        return res.status(200).json({
+            success: true,
+            message: `Contest ID ${contestId} submitted successfully as ${submissionType}`,
+        });
     } catch (error) {
         console.error("Error submitting contest:", error);
         res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+
+const getGlobalLeaderboard = async (req, res) => {
+    try {
+        const users = await userModel.find().lean();
+
+        let leaderboard = [];
+
+        users.forEach((user) => {
+            if (!user.contestHistory || user.contestHistory.length === 0) return;
+
+            const validContests = user.contestHistory.filter(ch => ch.submissionType === "valid");
+
+            if (validContests.length === 0) return;
+
+            const totalScore = validContests.reduce((acc, ch) => acc + (ch.score || 0), 0);
+
+            let earliestSubmission = null;
+            validContests.forEach((ch) => {
+                if (ch.date) {
+                    if (!earliestSubmission || new Date(ch.date) < new Date(earliestSubmission)) {
+                        earliestSubmission = ch.date;
+                    }
+                }
+            });
+
+            leaderboard.push({
+                userId: user._id,
+                name: user.name || "Unknown",
+                totalScore,
+                earliestSubmission,
+            });
+        });
+
+        leaderboard.sort((a, b) => {
+            if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+            if (a.earliestSubmission && b.earliestSubmission) {
+                return new Date(a.earliestSubmission) - new Date(b.earliestSubmission);
+            }
+            return 0;
+        });
+
+        res.status(200).json({ success: true, leaderboard });
+    } catch (error) {
+        console.error("Error fetching global leaderboard:", error);
+        res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
 };
 
@@ -969,8 +1047,11 @@ const getAllContests = async (req, res) => {
 
 
 module.exports = {
-    loginController, registerController, getUserInfo, updateProfileController, chatbotController, getChatHistory,clearChatHistory,
+    loginController, registerController, getUserInfo, updateProfileController, deleteProfileImageController,
+    uploadProfileImageController, chatbotController, getChatHistory, clearChatHistory, getGlobalLeaderboard,
     getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,getLanguages,getCompletedMocks,
-    saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,getMockCardDetails,getQuizCardDetails,
-    addNotification,getNotifications,markAsRead,deleteNotification,deleteAllNotifications,getContestUser,submitContest,getAllContests
+    saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,
+    getMockCardDetails,getQuizCardDetails,
+    addNotification,getNotifications,markAsRead,deleteNotification,
+    deleteAllNotifications,getContestUser,submitContest,getAllContests
  };
