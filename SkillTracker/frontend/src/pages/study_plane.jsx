@@ -38,11 +38,11 @@ const StudyPlan = () => {
   }, []);
 
   useEffect(() => {
-    const completedQuizzes =
-      JSON.parse(localStorage.getItem("completedQuizzes")) || [];
-    if (completedQuizzes.length > 0) {
-      completedQuizzes.forEach((lang) => handleGenerate(lang));
-      localStorage.setItem("completedQuizzes", JSON.stringify([])); 
+    const completedForStudy =
+      JSON.parse(localStorage.getItem("completedQuizzesForStudy")) || [];
+    if (completedForStudy.length > 0) {
+      completedForStudy.forEach((lang) => handleGenerate(lang));
+      localStorage.setItem("completedQuizzesForStudy", JSON.stringify([]));
     }
   }, []);
 

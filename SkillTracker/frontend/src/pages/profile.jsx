@@ -382,7 +382,7 @@ import "../styles/profile.css";
 import { FaPen, FaCamera } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Bar } from "react-chartjs-2";
+import { Bar, Line } from "react-chartjs-2";
 import defaultAvatar from "../assets/default-avatar.png";
 import {
   Chart as ChartJS,
@@ -392,18 +392,22 @@ import {
   Title,
   Tooltip,
   Legend,
+  PointElement, LineElement
 } from "chart.js";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
+
 import { Table, Tag } from "antd";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-
 const MySwal = withReactContent(Swal);
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
 
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [progress, setProgress] = useState({});
   const [mockList, setMockList] = useState([]);
+  const [contestProgress, setContestProgress] = useState([]);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [selectedFile, setSelectedFile] = useState(null);
@@ -466,6 +470,22 @@ const Profile = () => {
     };
     if (user) fetchMockList();
   }, [user]);
+
+
+  useEffect(() => {
+    const fetchContestProgress = async () => {
+      try {
+        const res = await axios.get("/api/v1/user/progress-contest", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setContestProgress(res.data.data || []);
+
+      } catch {
+        toast.error("Failed to load contest progress");
+      }
+    };
+    fetchContestProgress();
+  }, []);
 
 
   const handleUpdate = async () => {
@@ -665,6 +685,68 @@ const Profile = () => {
             <p className="no-data">No quiz data yet.</p>
           )}
         </div>
+
+        <div className="stats-section">
+          <h3>Contest Progress Over Time</h3>
+          {contestProgress.length > 0 ? (
+            <Line
+              data={{
+                labels: contestProgress.map((_, i) => `Contest ${i + 1}`),
+                datasets: [
+                  {
+                    label: "Contest Score (%)",
+                    data: contestProgress.map((c) => c.percentage),
+                    borderColor: "#3b82f6",
+                    backgroundColor: "rgba(59, 130, 246, 0.3)",
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: "#1d4ed8",
+                  },
+                ],
+              }}
+              options={{
+                responsive: true,
+                plugins: {
+                  tooltip: {
+                    callbacks: {
+                      label: function (context) {
+                        const idx = context.dataIndex;
+                        const c = contestProgress[idx];
+                        console.log(c); 
+                        return [
+                          `Contest Id: ${c.contestId}`,
+                          `Score: ${c.score}/${c.totalQuestions}`,
+                          `Percentage: ${c.percentage}%`,
+                          `Date: ${new Date(c.date).toLocaleDateString("en-GB")}`,
+                        ];
+                      }
+
+                    },
+                  },
+                  title: {
+                    display: true,
+                    text: "Your Contest Performance Trend",
+                  },
+                  legend: { display: false },
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: { display: true, text: "Percentage (%)" },
+                  },
+                  x: { title: { display: true, text: "Contest" } },
+                },
+              }}
+            />
+          ) : (
+            <p className="no-data">No valid contest data yet.</p>
+          )}
+        </div>
+
+
 
         <div className="mock-section">
           <h3>Mock Test Summary</h3>

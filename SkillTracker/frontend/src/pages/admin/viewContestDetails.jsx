@@ -71,6 +71,7 @@ const ContestView = () => {
         }
     };
 
+    
 
     return (
         <div className="view-container">

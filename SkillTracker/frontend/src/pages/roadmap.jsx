@@ -39,13 +39,14 @@ const Roadmap = () => {
   };
 
   useEffect(() => {
-    const completedQuizzes =
-      JSON.parse(localStorage.getItem("completedQuizzes")) || [];
-    if (completedQuizzes.length > 0) {
-      completedQuizzes.forEach((lang) => handleGenerate(lang));
-      localStorage.setItem("completedQuizzes", JSON.stringify([]));
+    const completedForRoadmap =
+      JSON.parse(localStorage.getItem("completedQuizzesForRoadmap")) || [];
+    if (completedForRoadmap.length > 0) {
+      completedForRoadmap.forEach((lang) => handleGenerate(lang));
+      localStorage.setItem("completedQuizzesForRoadmap", JSON.stringify([]));
     }
   }, []);
+  
 
   const handleGenerate = async (language) => {
     setGeneratingLang(language);

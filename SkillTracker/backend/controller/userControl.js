@@ -985,6 +985,41 @@ const submitContest = async (req, res) => {
 };
 
 
+const progressContestByUser = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await userModel.findById(userId).lean();
+
+        if (!user || !user.contestHistory) {
+            return res.status(200).json({ success: true, data: [] });
+        }
+
+        const validContests = user.contestHistory.filter(
+            (ch) => ch.submissionType === "valid"
+        );
+
+        const progressData = validContests.map((contest) => {
+            const totalQ = contest.totalQuestions || 1;
+            const percentage = ((contest.score / totalQ) * 100).toFixed(2);
+
+            return {
+                contestId: contest.contestId,   
+                score: contest.score,
+                totalQuestions: totalQ,
+                percentage: Number(percentage),
+                date: contest.date || new Date(),
+            };
+        });
+
+        res.status(200).json({ success: true, data: progressData });
+    } catch (error) {
+        console.error("Error fetching user contest progress:", error);
+        res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    }
+};
+
+
+
 const getGlobalLeaderboard = async (req, res) => {
     try {
         const users = await userModel.find().lean();
@@ -1034,6 +1069,9 @@ const getGlobalLeaderboard = async (req, res) => {
 
 
 
+
+
+
 const getAllContests = async (req, res) => {
     try {
         const contests = await contestModel.find().sort({ createdAt: -1 });
@@ -1051,7 +1089,7 @@ module.exports = {
     uploadProfileImageController, chatbotController, getChatHistory, clearChatHistory, getGlobalLeaderboard,
     getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,getLanguages,getCompletedMocks,
     saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,
-    getMockCardDetails,getQuizCardDetails,
+    getMockCardDetails, getQuizCardDetails, progressContestByUser,
     addNotification,getNotifications,markAsRead,deleteNotification,
     deleteAllNotifications,getContestUser,submitContest,getAllContests
  };

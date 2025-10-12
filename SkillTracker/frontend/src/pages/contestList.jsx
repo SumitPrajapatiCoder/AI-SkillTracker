@@ -57,7 +57,7 @@ const ContestList = () => {
                 {contests.map((contest) => {
                     const status = getStatus(contest);
                     const isComingSoon = status === "comingSoon";
-                    const publishDate = new Date(contest.publishDetails.date).toLocaleString();
+                    const publishDate = new Date(contest.publishDetails.date).toLocaleString("en-GB");
 
                     return (
                         <article
@@ -92,7 +92,6 @@ const ContestList = () => {
                 })}
             </div>
 
-            {/* Global Leaderboard */}
             <section className="global-leaderboard">
                 <h2>Global Leaderboard</h2>
                 <table>

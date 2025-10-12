@@ -89,16 +89,26 @@ const QuizLanguage = () => {
           { language, correct: finalScore, total: questions.length, playedQuestions },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-
-        const completedQuizzes =
-          JSON.parse(localStorage.getItem("completedQuizzes")) || [];
-        if (!completedQuizzes.includes(language)) {
-          completedQuizzes.push(language);
+        const completedQuizzesForStudy =
+          JSON.parse(localStorage.getItem("completedQuizzesForStudy")) || [];
+        if (!completedQuizzesForStudy.includes(language)) {
+          completedQuizzesForStudy.push(language);
           localStorage.setItem(
-            "completedQuizzes",
-            JSON.stringify(completedQuizzes)
+            "completedQuizzesForStudy",
+            JSON.stringify(completedQuizzesForStudy)
           );
         }
+
+        const completedQuizzesForRoadmap =
+          JSON.parse(localStorage.getItem("completedQuizzesForRoadmap")) || [];
+        if (!completedQuizzesForRoadmap.includes(language)) {
+          completedQuizzesForRoadmap.push(language);
+          localStorage.setItem(
+            "completedQuizzesForRoadmap",
+            JSON.stringify(completedQuizzesForRoadmap)
+          );
+        }
+
         
         toast.success("Quiz submitted!");
       } catch (err) {
