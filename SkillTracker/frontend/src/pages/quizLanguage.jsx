@@ -42,9 +42,15 @@ const QuizLanguage = () => {
       const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, cardQuestions);
       setQuestions(selected);
-      setTimer(cardTime * 60);
+
+      const savedTime = localStorage.getItem(`quiz-${language}-timer`);
+      if (savedTime) setTimer(parseInt(savedTime, 10));
+      else setTimer(cardTime * 60);
+
+      const savedAnswers = localStorage.getItem(`quiz-${language}-answers`);
+      if (savedAnswers) setAnswers(JSON.parse(savedAnswers));
     }
-  }, [allQuestions, cardQuestions, cardTime]);
+  }, [allQuestions, cardQuestions, cardTime, language]);
 
   useEffect(() => {
     if (!completed && questions.length > 0 && timer > 0) {
@@ -53,22 +59,30 @@ const QuizLanguage = () => {
           if (prev <= 1) {
             clearInterval(intervalRef.current);
             setCompleted(true);
+            localStorage.removeItem(`quiz-${language}-timer`);
             return 0;
           }
-          return prev - 1;
+          const newTime = prev - 1;
+          localStorage.setItem(`quiz-${language}-timer`, newTime);
+          return newTime;
         });
       }, 1000);
 
       return () => clearInterval(intervalRef.current);
     }
-  }, [timer, completed, questions]);
-  
+  }, [completed, questions, timer, language]);
+
+  useEffect(() => {
+    localStorage.setItem(`quiz-${language}-answers`, JSON.stringify(answers));
+  }, [answers, language]);
 
   useEffect(() => {
     const submitQuiz = async () => {
       if (!completed || questions.length === 0) return;
 
       clearInterval(intervalRef.current);
+      localStorage.removeItem(`quiz-${language}-timer`);
+      localStorage.removeItem(`quiz-${language}-answers`);
 
       const finalScore = questions.reduce(
         (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
@@ -89,6 +103,7 @@ const QuizLanguage = () => {
           { language, correct: finalScore, total: questions.length, playedQuestions },
           { headers: { Authorization: `Bearer ${token}` } }
         );
+
         const completedQuizzesForStudy =
           JSON.parse(localStorage.getItem("completedQuizzesForStudy")) || [];
         if (!completedQuizzesForStudy.includes(language)) {
@@ -109,7 +124,6 @@ const QuizLanguage = () => {
           );
         }
 
-        
         toast.success("Quiz submitted!");
       } catch (err) {
         toast.error("Failed to save result");
@@ -127,9 +141,8 @@ const QuizLanguage = () => {
   const handleNext = () => {
     setCurrent((c) => {
       const next = c + 1;
-      if (next < questions.length) {
-        return next;
-      } else {
+      if (next < questions.length) return next;
+      else {
         setCompleted(true);
         return c;
       }
@@ -157,7 +170,6 @@ const QuizLanguage = () => {
         <div className="review-section">
           {questions.map((q, idx) => {
             const highlightedQ = hljs.highlightAuto(q.question).value;
-
             return (
               <div key={idx} className="review-question-card">
                 <div className="review-question-header">
@@ -177,16 +189,11 @@ const QuizLanguage = () => {
                     return (
                       <div
                         key={i}
-                        className={`review-option 
-    ${isCorrect ? "correct" : ""} 
-    ${isSelected && !isCorrect ? "wrong" : ""}`}
+                        className={`review-option ${isCorrect ? "correct" : ""} ${isSelected && !isCorrect ? "wrong" : ""
+                          }`}
                       >
                         <pre>
-                          <code
-                            dangerouslySetInnerHTML={{
-                              __html: highlightedOpt,
-                            }}
-                          />
+                          <code dangerouslySetInnerHTML={{ __html: highlightedOpt }} />
                         </pre>
                         {isCorrect || isSelected ? (
                           <span
@@ -240,19 +247,29 @@ const QuizLanguage = () => {
 
   return (
     <div className="quiz-language-wrapper">
-      <div className="question-box">
-        <div className="quit">
-          <button onClick={() => navigate("/quiz")}>Quit</button>
-        </div>
-        {!completed && (
-          <div className="timer">
-            ⏱ Time Left: {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+      <div className="quiz-header">
+        <div className="header-top">
+          <div className="quiz-quit">
+            <button onClick={() => navigate("/quiz")}>Quit</button>
           </div>
-        )}
 
+          <h2>{language} Quiz</h2>
+
+          {!completed && (
+            <div className="timer">
+              ⏱ Time Left: {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+            </div>
+          )}
+        </div>
+
+        <div className="header-bottom">
+          <p>Total Questions: {questions.length}</p>
+        </div>
+      </div>
+
+      <div className="question-box">
         <pre>
-          Q{current + 1}:{" "}
-          <code dangerouslySetInnerHTML={{ __html: highlightedHTML }} />
+          Q{current + 1}: <code dangerouslySetInnerHTML={{ __html: highlightedHTML }} />
         </pre>
 
         <div className="options-list">
@@ -273,9 +290,7 @@ const QuizLanguage = () => {
                   onChange={() => handleAnswer(opt)}
                 />
                 <pre className="option-code">
-                  <code
-                    dangerouslySetInnerHTML={{ __html: highlightedOpt }}
-                  />
+                  <code dangerouslySetInnerHTML={{ __html: highlightedOpt }} />
                 </pre>
               </label>
             );

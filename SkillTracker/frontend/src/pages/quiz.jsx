@@ -28,27 +28,31 @@ function Quiz() {
     fetchQuizData();
   }, []);
 
-  const handleClick = (card) => {
+  const handleNavigate = (card) => {
     navigate(`/quiz/${card.language}`, {
       state: { cardQuestions: card.questions, cardTime: card.time },
     });
   };
 
-  if (loading) return <p>Loading quizzes...</p>;
+  if (loading) return <p className="loading-text">Loading quizzes...</p>;
 
   return (
     <div className="quiz-page">
       <h2 className="quiz-title">Choose A Quiz</h2>
       <div className="quiz-card-container">
         {quizData.map((card) => (
-          <div
-            key={card.language}
-            className="quiz-card"
-            onClick={() => handleClick(card)}
-          >
-            <h3>{card.language}</h3>
-            <p>Questions: {card.questions}</p>
-            <p>Time: {card.time} mins</p>
+          <div key={card.language} className="quiz-card">
+            <div className="quiz-card-header">{card.language}</div>
+            <div className="quiz-card-content">
+              <p>Questions: {card.questions}</p>
+              <p>Time: {card.time} mins</p>
+            </div>
+            <button
+              className="quiz-button"
+              onClick={() => handleNavigate(card)}
+            >
+              Start Quiz
+            </button>
           </div>
         ))}
       </div>

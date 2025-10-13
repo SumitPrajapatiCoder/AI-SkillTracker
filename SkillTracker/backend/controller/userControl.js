@@ -57,7 +57,7 @@ const loginController = async (req, res) => {
         }
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-            expiresIn: "1d",
+            expiresIn: "2d",
         });
 
         res.status(200).send({
@@ -1018,7 +1018,64 @@ const progressContestByUser = async (req, res) => {
     }
 };
 
+const getUserRank = async (req, res) => {
+    try {
+        const userId = req.user.id;
 
+        const users = await userModel.find().lean();
+
+        const leaderboard = [];
+
+        users.forEach(user => {
+            if (!user.contestHistory || user.contestHistory.length === 0) return;
+
+            const validContests = user.contestHistory.filter(ch => ch.submissionType === "valid");
+            if (validContests.length === 0) return;
+
+            const totalScore = validContests.reduce((acc, ch) => acc + (ch.score || 0), 0);
+
+            let earliestSubmission = null;
+            validContests.forEach(ch => {
+                if (ch.date) {
+                    if (!earliestSubmission || new Date(ch.date) < new Date(earliestSubmission)) {
+                        earliestSubmission = ch.date;
+                    }
+                }
+            });
+
+            leaderboard.push({
+                userId: user._id.toString(),
+                name: user.name || "Unknown",
+                totalScore,
+                earliestSubmission,
+            });
+        });
+
+        leaderboard.sort((a, b) => {
+            if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+            if (a.earliestSubmission && b.earliestSubmission) {
+                return new Date(a.earliestSubmission) - new Date(b.earliestSubmission);
+            }
+            return 0;
+        });
+
+        const rankIndex = leaderboard.findIndex(u => u.userId === userId);
+        let userRank = null;
+
+        if (rankIndex !== -1) {
+            userRank = {
+                rank: rankIndex + 1,
+                name: leaderboard[rankIndex].name,
+                totalScore: leaderboard[rankIndex].totalScore,
+            };
+        }
+
+        res.status(200).json({ success: true, userRank });
+    } catch (error) {
+        console.error("Error fetching user rank:", error);
+        res.status(500).json({ success: false, message: "Server error", error: error.message });
+    }
+};
 
 const getGlobalLeaderboard = async (req, res) => {
     try {
@@ -1070,8 +1127,6 @@ const getGlobalLeaderboard = async (req, res) => {
 
 
 
-
-
 const getAllContests = async (req, res) => {
     try {
         const contests = await contestModel.find().sort({ createdAt: -1 });
@@ -1089,7 +1144,7 @@ module.exports = {
     uploadProfileImageController, chatbotController, getChatHistory, clearChatHistory, getGlobalLeaderboard,
     getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,getLanguages,getCompletedMocks,
     saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,
-    getMockCardDetails, getQuizCardDetails, progressContestByUser,
+    getMockCardDetails, getQuizCardDetails, progressContestByUser,getUserRank,
     addNotification,getNotifications,markAsRead,deleteNotification,
     deleteAllNotifications,getContestUser,submitContest,getAllContests
  };

@@ -16,6 +16,7 @@ const Contest = () => {
   const [answers, setAnswers] = useState({});
   const [completed, setCompleted] = useState(false);
   const [timer, setTimer] = useState(0);
+
   const intervalRef = useRef(null);
 
   useEffect(() => {
@@ -30,7 +31,16 @@ const Contest = () => {
           const c = res.data.contest;
           setContest(c);
           setQuestions(c.questions || []);
-          setTimer(c.timeDuration * 60);
+
+          const savedTime = localStorage.getItem(`contest-${id}-timer`);
+          if (savedTime) setTimer(parseInt(savedTime, 10));
+          else setTimer(c.timeDuration * 60);
+
+          const savedAnswers = localStorage.getItem(`contest-${id}-answers`);
+          if (savedAnswers) setAnswers(JSON.parse(savedAnswers));
+
+          const savedCompleted = localStorage.getItem(`contest-${id}-completed`);
+          if (savedCompleted === "true") setCompleted(true);
         } else {
           toast.error(res.data.message);
         }
@@ -51,57 +61,68 @@ const Contest = () => {
         if (prev <= 1) {
           clearInterval(intervalRef.current);
           setCompleted(true);
+          localStorage.removeItem(`contest-${id}-timer`);
           return 0;
         }
-        return prev - 1;
+        const newTime = prev - 1;
+        localStorage.setItem(`contest-${id}-timer`, newTime);
+        return newTime;
       });
     }, 1000);
 
     return () => clearInterval(intervalRef.current);
-  }, [contest, completed]);
+  }, [contest, completed, id]);
 
   useEffect(() => {
-    if (completed && questions.length > 0) {
+    localStorage.setItem(`contest-${id}-answers`, JSON.stringify(answers));
+  }, [answers, id]);
+
+  useEffect(() => {
+    const submitContest = async () => {
+      if (!completed || questions.length === 0) return;
+
       clearInterval(intervalRef.current);
-      handleSubmit();
-    }
-  }, [completed]);
+      localStorage.removeItem(`contest-${id}-timer`);
+      localStorage.removeItem(`contest-${id}-answers`);
+      localStorage.setItem(`contest-${id}-completed`, "true");
+
+      const correctCount = questions.reduce(
+        (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
+        0
+      );
+
+      const playedQuestions = questions.map((q, idx) => ({
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        selectedAnswer: answers[idx] || null,
+      }));
+
+      try {
+        const token = localStorage.getItem("token");
+        await axios.post(
+          "/api/v1/user/contestSubmit",
+          {
+            contestId: contest._id,
+            score: correctCount,
+            totalQuestions: questions.length,
+            playedQuestions,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        toast.success("Contest submitted successfully!");
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to save contest result");
+      }
+    };
+
+    submitContest();
+  }, [completed, questions, answers, contest, id]);
 
   const handleAnswer = (selected) => {
     setAnswers((prev) => ({ ...prev, [current]: selected }));
-  };
-
-  const handleSubmit = async () => {
-    const correctCount = questions.reduce(
-      (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
-      0
-    );
-
-    const playedQuestions = questions.map((q, idx) => ({
-      question: q.question,
-      options: q.options,
-      correctAnswer: q.correctAnswer,
-      selectedAnswer: answers[idx] || null,
-    }));
-
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        "/api/v1/user/contestSubmit",
-        {
-          contestId: contest._id,
-          score: correctCount,
-          totalQuestions: questions.length,
-          playedQuestions,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      toast.success("Contest submitted successfully!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to save contest result");
-    }
   };
 
   const handleNext = () => {
@@ -146,14 +167,26 @@ const Contest = () => {
 
   return (
     <section className="contest-page-wrapper">
-      <header className="contest-page-header">
-        <button
-          className="contest-page-quit-btn"
-          onClick={() => navigate("/contestList")}
-        >
-          Quit
-        </button>
-        ⏱ Time Left: {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+      <header className="contest-header">
+        <div className="contest-header-top">
+          <button
+            className="contest-quit-btn"
+            onClick={() => navigate("/contestList")}
+          >
+            Quit
+          </button>
+          <span className="contest-timer">
+            ⏱ Time Left: {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+          </span>
+        </div>
+
+        <div className="contest-header-center">
+          <h2>Contest {contest._id.slice(-6).toUpperCase()}</h2>
+          <p>
+            <strong>Questions:</strong> {questions.length} |{" "}
+            <strong>Duration:</strong> {contest.timeDuration} mins
+          </p>
+        </div>
       </header>
 
       <article className="contest-page-question-box">

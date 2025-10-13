@@ -3,7 +3,7 @@ const { loginController, registerController,getUserInfo,generateRoadMap,getStudy
     getRoadmaps, saveRoadmap, getLanguages, getMockCardDetails, getQuizCardDetails,getCompletedMocks,clearChatHistory,
 updateProfileController,saveMockResult,getMockStatus,saveQuizResult,generateStudyPlan,chatbotController,getChatHistory,
     getUserProgress, getNotifications, markAsRead, deleteAllNotifications, uploadProfileImageController, deleteProfileImageController,
-    getAllContests, getContestUser, submitContest, getGlobalLeaderboard,progressContestByUser } = require("../controller/userControl");
+    getAllContests, getContestUser, submitContest, getGlobalLeaderboard,progressContestByUser,getUserRank} = require("../controller/userControl");
 const authMiddleware = require("../middleware/authMiddleware");
 const { upload } = require("../config/cloudinary");
 
@@ -54,6 +54,6 @@ router.get("/contest/:id", authMiddleware, getContestUser);
 router.post("/contestSubmit", authMiddleware, submitContest);
 router.get("/leaderboard/global", authMiddleware, getGlobalLeaderboard);
 router.get("/progress-contest", authMiddleware, progressContestByUser);
-
+router.get("/user-rank", authMiddleware, getUserRank);
 
 module.exports = router;

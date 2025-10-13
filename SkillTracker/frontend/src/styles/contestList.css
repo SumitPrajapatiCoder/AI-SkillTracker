@@ -85,6 +85,119 @@
   color: #9ca3af;
 }
 
+.user-rank-summary {
+  margin-top: 40px;
+  margin-bottom: 20px;
+  padding: 12px 18px;
+  background: linear-gradient(90deg, #1e3a8a, #2563eb);
+  color: #fff;
+  border-radius: 10px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.highlight-row {
+  background-color: rgba(37, 99, 235, 0.15);
+  font-weight: bold;
+}
+
+
+.contest-play-btn {
+  background: #16a34a;
+  color: #fff;
+  font-weight: 600;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.contest-play-btn:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+}
+
+.user-rank {
+    background-color: #fdf6e3;
+    border: 2px solid #ffcc00;
+    border-radius: 10px;
+    padding: 10px 10px;
+    margin: 20px 0;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-rank:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.user-rank h3 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+    color: #ff9900;
+}
+
+.user-rank p {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.user-rank p strong {
+    color: #ff6600; 
+}
+
+
+.contest-list-card-footer {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column; 
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.contest-list-date {
+  font-size: 0.9rem;
+  color: #d1d5db;
+  display: flex;
+  align-items: center;
+}
+
+.contest-play-btn {
+  background: #16a34a;
+  color: #fff;
+  font-weight: 600;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.contest-play-btn:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+}
+
+.contest-list-status.soon {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #f59e0b;
+}
+
+
 
 @media (max-width: 768px) {
   .contest-list-wrapper {
@@ -219,11 +332,6 @@
 
 .global-leaderboard tbody tr:nth-child(odd) {
   background-color: #2f3848;
-}
-
-.global-leaderboard tbody tr:first-child td {
-  font-weight: bold;
-  color: #facc15;
 }
 
 @media (max-width: 768px) {

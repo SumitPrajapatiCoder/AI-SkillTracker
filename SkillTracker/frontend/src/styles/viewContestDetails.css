@@ -42,21 +42,21 @@
   grid-column: 1 / span 2;
   font-weight: 700;
   font-size: 1.2rem;
-  color: #1a202c;
+  color: #d1c4e9;
   margin: 0.25rem 0;
 }
 
 .contest-header p.question-size {
   justify-self: start;
   font-weight: 600;
-  color: #2d3748;
+  color: #d1c4e9;
   margin: 0.25rem 0;
 }
 
 .contest-header p.time-duration {
   justify-self: end;
   font-weight: 600;
-  color: #2d3748;
+  color: #d1c4e9;
   margin: 0.25rem 0;
 }
 
@@ -65,7 +65,7 @@
   justify-self: center;
   font-weight: 500;
   font-size: 0.95rem;
-  color: #4a5568;
+   color: #d1c4e9;
   margin: 0.25rem 0;
 }
 

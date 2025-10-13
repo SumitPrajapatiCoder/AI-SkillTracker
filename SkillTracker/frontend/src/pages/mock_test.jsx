@@ -27,27 +27,31 @@ const MockTest = () => {
     fetchMockData();
   }, []);
 
-  const handleClick = (card) => {
+  const handleNavigate = (card) => {
     navigate(`/mock_test/${card.language}`, {
       state: { cardQuestions: card.questions, cardTime: card.time },
     });
   };
 
-  if (loading) return <p>Loading mock tests...</p>;
+  if (loading) return <p className="loading-text">Loading mock tests...</p>;
 
   return (
     <div className="mocktest-page">
-      <h2 className="mocktest-title"> Choose A Mock Tests</h2>
+      <h2 className="mocktest-title">Choose A Mock Test</h2>
       <div className="mocktest-cards">
         {mockData.map((test) => (
-          <div
-            key={test.language}
-            className="mocktest-card"
-            onClick={() => handleClick(test)}
-          >
-            <h3>{test.language}</h3>
-            <p>Questions: {test.questions}</p>
-            <p>Time: {test.time} mins</p>
+          <div key={test.language} className="mocktest-card">
+            <div className="mocktest-card-header">{test.language}</div>
+            <div className="mocktest-card-content">
+              <p>Questions: {test.questions}</p>
+              <p>Time: {test.time} mins</p>
+            </div>
+            <button
+              className="mocktest-button"
+              onClick={() => handleNavigate(test)}
+            >
+              Start Mock
+            </button>
           </div>
         ))}
       </div>

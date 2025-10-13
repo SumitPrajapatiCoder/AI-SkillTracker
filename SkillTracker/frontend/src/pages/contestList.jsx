@@ -7,22 +7,30 @@ import "../styles/contestList.css";
 const ContestList = () => {
     const [contests, setContests] = useState([]);
     const [leaderboard, setLeaderboard] = useState([]);
+    const [userRank, setUserRank] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchContests = async () => {
+        const fetchData = async () => {
             try {
                 const token = localStorage.getItem("token");
+                if (!token) throw new Error("No token found");
 
-                const [contestsRes, leaderboardRes] = await Promise.all([
+                const [contestsRes, leaderboardRes, userRankRes] = await Promise.all([
                     axios.get("/api/v1/user/contestAll", { headers: { Authorization: `Bearer ${token}` } }),
                     axios.get("/api/v1/user/leaderboard/global", { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get("/api/v1/user/user-rank", { headers: { Authorization: `Bearer ${token}` } }),
                 ]);
 
                 setContests(contestsRes.data.contests || []);
                 setLeaderboard(leaderboardRes.data.leaderboard || []);
+
+                if (userRankRes.data.success && userRankRes.data.userRank) {
+                    setUserRank(userRankRes.data.userRank);
+                }
+
             } catch (err) {
                 console.error(err);
                 setError("Failed to load contests or leaderboard");
@@ -31,14 +39,13 @@ const ContestList = () => {
             }
         };
 
-        fetchContests();
+        fetchData();
     }, []);
 
     const getStatus = (contest) => {
         const now = new Date();
         const publishTime = new Date(contest.publishDetails.date);
-        if (now < publishTime) return "comingSoon";
-        return "liveOrPast";
+        return now < publishTime ? "comingSoon" : "liveOrPast";
     };
 
     const handleContestClick = (contest) => {
@@ -57,16 +64,22 @@ const ContestList = () => {
                 {contests.map((contest) => {
                     const status = getStatus(contest);
                     const isComingSoon = status === "comingSoon";
-                    const publishDate = new Date(contest.publishDetails.date).toLocaleString("en-GB");
+                    const publishDate = new Date(contest.publishDetails.date).toLocaleString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                    });
 
                     return (
                         <article
                             key={contest._id}
                             className={`contest-list-card ${isComingSoon ? "coming-soon" : "active"}`}
-                            onClick={() => handleContestClick(contest)}
                         >
                             <header className="contest-list-card-header">
-                                <h3>Contest {contest._id.slice(-5)}</h3>
+                                <h3>Contest {contest._id.slice(-5).toUpperCase()}</h3>
                                 <p>
                                     <strong>Questions:</strong> {contest.questionSize} |{" "}
                                     <strong>Duration:</strong> {contest.timeDuration} mins
@@ -74,23 +87,36 @@ const ContestList = () => {
                             </header>
 
                             <footer className="contest-list-card-footer">
+                                <span className="contest-list-date">
+                                    <FaCalendarAlt style={{ marginRight: "5px" }} /> {publishDate}
+                                </span>
+
                                 {isComingSoon ? (
                                     <span className="contest-list-status soon">
-                                        <FaLock style={{ marginRight: "5px" }} /> Coming Soon
+                                        <FaLock style={{ marginRight: "6px" }} /> Coming Soon
                                     </span>
                                 ) : (
-                                    <span className="contest-list-status live">
-                                        <FaPlayCircle style={{ marginRight: "5px" }} /> Play Now
-                                    </span>
+                                    <button
+                                        className="contest-play-btn"
+                                        onClick={() => handleContestClick(contest)}
+                                    >
+                                        <FaPlayCircle style={{ marginRight: "6px" }} /> Play Now
+                                    </button>
                                 )}
-                                <span className="contest-list-date">
-                                    <FaCalendarAlt style={{ marginRight: "4px" }} /> {publishDate}
-                                </span>
                             </footer>
                         </article>
                     );
                 })}
             </div>
+
+            {userRank && (
+                <section className="user-rank">
+                    <h3>Your Rank</h3>
+                    <p>
+                        <strong>Rank:</strong> {userRank.rank} | <strong>Name:</strong> {userRank.name} | <strong>Total Score:</strong> {userRank.totalScore}
+                    </p>
+                </section>
+            )}
 
             <section className="global-leaderboard">
                 <h2>Global Leaderboard</h2>
@@ -104,7 +130,7 @@ const ContestList = () => {
                     </thead>
                     <tbody>
                         {leaderboard.map((user, index) => (
-                            <tr key={user.userId}>
+                            <tr key={user.userId} style={userRank?.name === user.name ? { backgroundColor: "#a7a79bff" } : {}}>
                                 <td>{index + 1}</td>
                                 <td>{user.name}</td>
                                 <td>{user.totalScore}</td>

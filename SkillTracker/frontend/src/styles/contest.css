@@ -9,13 +9,6 @@
   font-family: "Segoe UI", sans-serif;
 }
 
-.contest-page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
 .contest-page-quit-btn,
 .contest-page-back-btn {
   padding: 8px 16px;
@@ -134,6 +127,42 @@
 }
 
 
+.contest-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 25px;
+}
+
+.contest-page-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.contest-page-timer {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #34d399;
+}
+
+.contest-page-header-center {
+  text-align: center;
+  margin-top: 5px;
+}
+
+.contest-page-header-center h2 {
+  color: #60a5fa;
+  font-size: 1.6rem;
+  margin-bottom: 6px;
+}
+
+.contest-page-header-center p {
+  color: #9ca3af;
+  font-size: 1rem;
+}
+
+
 
 @media (max-width: 768px) {
   .contest-page-wrapper {
@@ -145,6 +174,14 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .contest-page-header-center h2 {
+    font-size: 1.3rem;
+  }
+  
+  .contest-page-header-center p {
+    font-size: 0.9rem;
   }
 
   .contest-page-quit-btn,
@@ -214,5 +251,83 @@
   .contest-page-complete {
     padding: 20px;
     margin: 40px auto;
+  }
+}
+
+
+
+
+
+.contest-header {
+  position: relative;
+  background-color: #2d1e50; 
+  padding: 5px 5px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+}
+
+.contest-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.contest-quit-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #e21111;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.contest-quit-btn:hover {
+  background: #ef4444;
+}
+
+.contest-timer {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ff6f61;
+}
+
+.contest-header-center {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.contest-header-center h2 {
+  font-size: 1.9rem;
+  color: #ffb347; 
+  margin-bottom: 6px;
+}
+
+.contest-header-center p {
+  font-size: 1.05rem;
+  color: #d1c4e9; 
+}
+
+@media (max-width: 768px) {
+  .contest-header-top {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .contest-quit-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .contest-header-center h2 {
+    font-size: 1.5rem;
+  }
+
+  .contest-header-center p {
+    font-size: 1rem;
   }
 }

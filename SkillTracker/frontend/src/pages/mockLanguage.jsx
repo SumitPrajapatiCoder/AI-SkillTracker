@@ -90,14 +90,21 @@ const MockLanguage = () => {
     fetchQuestions();
   }, [language]);
 
+
   useEffect(() => {
     if (allQuestions.length > 0 && cardQuestions) {
       const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
       const selected = shuffled.slice(0, cardQuestions);
       setQuestions(selected);
-      setTimer(cardTime * 60);
+
+      const savedTime = localStorage.getItem(`mock-${language}-timer`);
+      if (savedTime) {
+        setTimer(parseInt(savedTime, 10));
+      } else {
+        setTimer(cardTime * 60);
+      }
     }
-  }, [allQuestions, cardQuestions, cardTime]);
+  }, [allQuestions, cardQuestions, cardTime, language]);
 
   useEffect(() => {
     if (!completed && questions.length > 0 && timer > 0) {
@@ -106,9 +113,12 @@ const MockLanguage = () => {
           if (prev <= 1) {
             clearInterval(interval);
             handleSubmit();
+            localStorage.removeItem(`mock-${language}-timer`);
             return 0;
           }
-          return prev - 1;
+          const newTime = prev - 1;
+          localStorage.setItem(`mock-${language}-timer`, newTime);
+          return newTime;
         });
       }, 1000);
       return () => clearInterval(interval);
@@ -140,6 +150,7 @@ const MockLanguage = () => {
     );
     setScore(finalScore);
     setCompleted(true);
+    localStorage.removeItem(`mock-${language}-timer`);
 
     try {
       const token = localStorage.getItem("token");
@@ -161,8 +172,6 @@ const MockLanguage = () => {
     const cleanText = text.replace(/```[a-zA-Z0-9]*/g, "").replace(/```/g, "");
     return hljs.highlightAuto(cleanText).value;
   };
-
-
 
   const handleDownloadManual = async () => {
     if (!certificateRef.current) return toast.error("Certificate not found.");
@@ -240,8 +249,6 @@ const MockLanguage = () => {
     }
   };
 
-
-
   if (mockDisabled) {
     return (
       <div className="quiz-complete">
@@ -317,14 +324,22 @@ const MockLanguage = () => {
 
   return (
     <div className="quiz-language-wrapper">
-      <div className="question-box">
-        <div className="quit">
-          <button onClick={() => navigate("/mock_test")}>Quit</button>
+      <div className="mock-header">
+        <div className="mock-header-top">
+          <button className="quit-btn" onClick={() => navigate("/mock_test")}>
+            Quit
+          </button>
+          <h2>{language} Mock Test</h2>
+          {!completed && (
+            <div className="mock-timer">
+              ⏱ Time Left: {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+            </div>
+          )}
         </div>
-        <div className="timer">
-          ⏱ Time Left: {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
-        </div>
+        <p>Total Questions: {questions.length}</p>
+      </div>
 
+      <div className="question-box">
         <pre>
           <strong>Q{current + 1}:</strong>{" "}
           <code
@@ -341,7 +356,8 @@ const MockLanguage = () => {
             return (
               <label
                 key={idx}
-                className={`option-label ${selectedOption === opt ? "selected" : ""}`}
+                className={`option-label ${selectedOption === opt ? "selected" : ""
+                  }`}
               >
                 <input
                   type="radio"
@@ -357,7 +373,6 @@ const MockLanguage = () => {
             );
           })}
         </div>
-
 
         <div className="navigation-buttons">
           <button onClick={handlePrevious} disabled={current === 0}>

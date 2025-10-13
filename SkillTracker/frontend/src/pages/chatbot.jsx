@@ -67,29 +67,6 @@ function Chatbot() {
   }, []);
 
   useEffect(() => {
-    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.lang = "en-US";
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInput(transcript);
-        setListening(false);
-      };
-      recognition.onerror = (event) => {
-        toast.error("Speech recognition error: " + event.error);
-        setListening(false);
-      };
-      recognition.onend = () => setListening(false);
-
-      recognitionRef.current = recognition;
-    }
-  }, []);
-
-  useEffect(() => {
     document.querySelectorAll("pre code").forEach((block) => {
       hljs.highlightElement(block);
     });
@@ -99,6 +76,39 @@ function Chatbot() {
   useEffect(() => {
     const saved = localStorage.getItem("darkMode");
     if (saved === "on") setDarkMode(true);
+  }, []);
+
+  useEffect(() => {
+    if (!("SpeechRecognition" in window || "webkitSpeechRecognition" in window)) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => setListening(true);
+
+    recognition.onresult = (event) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setInput(transcript);
+    };
+
+    recognition.onend = () => setListening(false);
+
+    recognition.onerror = (event) => {
+      if (event.error === "no-speech") toast.info("No speech detected. Please try again.");
+      else if (event.error === "audio-capture") toast.error("Microphone not detected.");
+      else if (event.error === "not-allowed") toast.error("Microphone access denied.");
+      else toast.error("Speech recognition error: " + event.error);
+      setListening(false);
+    };
+
+    recognitionRef.current = recognition;
   }, []);
 
   const handleSend = async () => {
@@ -148,73 +158,6 @@ function Chatbot() {
     });
   };
 
-  const handleBubbleClick = (msg, idx) => {
-    if (activeSoundIdx === idx) {
-      speechSynthesis.cancel();
-      speakingRef.current = null;
-      setActiveSoundIdx(null);
-    } else {
-      if (speakingRef.current !== null) speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(msg.text);
-      utterance.onend = () => (speakingRef.current = null);
-      speechSynthesis.speak(utterance);
-      speakingRef.current = idx;
-      setActiveSoundIdx(idx);
-    }
-  };
-
-  useEffect(() => {
-    if (!("SpeechRecognition" in window || "webkitSpeechRecognition" in window)) {
-      toast.error("Speech Recognition is not supported in this browser.");
-      return;
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-
-    recognition.lang = "en-US";
-    recognition.interimResults = true;
-    recognition.continuous = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => {
-      setListening(true);
-      console.log("Listening...");
-    };
-
-    recognition.onresult = (event) => {
-      let transcript = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
-      }
-      setInput(transcript);
-    };
-
-    recognition.onend = () => {
-      console.log("Recognition ended");
-      setListening(false);
-    };
-
-    recognition.onerror = (event) => {
-      console.warn("Speech recognition error:", event.error);
-
-      if (event.error === "no-speech") {
-        toast.info("No speech detected. Please try again.");
-      } else if (event.error === "audio-capture") {
-        toast.error("Microphone not detected. Please check your input device.");
-      } else if (event.error === "not-allowed") {
-        toast.error("Microphone access denied. Please allow mic permission.");
-      } else {
-        toast.error("Speech recognition error: " + event.error);
-      }
-
-      setListening(false);
-    };
-
-    recognitionRef.current = recognition;
-  }, []);
-
-
   const handleMicClick = () => {
     if (!recognitionRef.current) {
       toast.error("Speech Recognition not supported in this browser.");
@@ -222,10 +165,9 @@ function Chatbot() {
     }
 
     try {
-      if (listening) {
-        recognitionRef.current.stop();
-      } else {
-        recognitionRef.current.abort(); 
+      if (listening) recognitionRef.current.stop();
+      else {
+        recognitionRef.current.abort();
         setInput("");
         recognitionRef.current.start();
       }
@@ -234,8 +176,6 @@ function Chatbot() {
       toast.error("Failed to start microphone. Try again.");
     }
   };
-
-
 
   const handleClearChat = async () => {
     const result = await MySwal.fire({
@@ -264,6 +204,26 @@ function Chatbot() {
       console.error("Error clearing chat:", err.message);
     }
   };
+  
+  const handleBubbleClick = (msg, idx) => {
+    if (speakingRef.current !== null) speechSynthesis.cancel();
+
+    if (activeSoundIdx === idx) {
+      speakingRef.current = null;
+      setActiveSoundIdx(null);
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(msg.text);
+    utterance.onend = () => {
+      speakingRef.current = null;
+      setActiveSoundIdx(null);
+    };
+
+    speechSynthesis.speak(utterance);
+    speakingRef.current = idx;
+    setActiveSoundIdx(idx);
+  };
 
   return (
     <div className={`chatbot-container ${darkMode ? "dark-mode" : ""}`}>
@@ -283,9 +243,8 @@ function Chatbot() {
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={`chat-bubble ${msg.role === "user" ? "from-user" : "from-bot"} ${activeSoundIdx === idx ? "active-sound" : ""
-              }`}
-            onClick={() => msg.role === "bot" && handleBubbleClick(msg, idx)}
+            className={`chat-bubble ${msg.role === "user" ? "from-user" : "from-bot"} ${activeSoundIdx === idx ? "active-sound" : ""}`}
+            onClick={() => handleBubbleClick(msg, idx)}
           >
             <strong>{msg.role === "user" ? user?.username || "You" : "Gemini"}</strong>
             <div
