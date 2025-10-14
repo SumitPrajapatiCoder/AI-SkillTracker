@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const userModel = require("../models/userModel");
+const languageModel = require("../models/languageModel");
 const contestModel = require("../models/contestModel");
 const quizCardModel = require("../models/quizCardModel");
 const mockCardModel = require("../models/mockCardModel");
@@ -8,7 +9,6 @@ const jwt = require("jsonwebtoken");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const { cloudinary } = require("../config/cloudinary");
-
 
 
 const registerController = async (req, res) => {
@@ -859,7 +859,6 @@ const markAsRead = async (req, res) => {
 };
 
 
-
 const deleteNotification = async (req, res) => {
     try {
         const { notificationId } = req.params; 
@@ -940,18 +939,20 @@ const getContestUser = async (req, res) => {
 };
 
 
+
 const submitContest = async (req, res) => {
     try {
         const { contestId, score, totalQuestions, playedQuestions } = req.body;
         const userId = req.user.id;
 
         const contest = await contestModel.findById(contestId).lean();
-        if (!contest) return res.status(404).json({ message: "Contest not found" });
+        if (!contest)
+            return res.status(404).json({ success: false, message: "Contest not found" });
 
         const now = new Date();
         const publishTime = new Date(contest.publishDetails.date);
-        const durationMinutes = contest.timeDuration; 
-        const endTime = new Date(publishTime.getTime() + durationMinutes * 60000); 
+        const durationMinutes = contest.timeDuration;
+        const endTime = new Date(publishTime.getTime() + durationMinutes * 60000);
 
         const submissionType = now >= publishTime && now <= endTime ? "valid" : "not valid";
 
@@ -967,22 +968,73 @@ const submitContest = async (req, res) => {
                 },
             },
         });
-        
-        const message =
-            submissionType === "valid"
-                ? `Your submission for Contest ${contestId} was successful and is ${submissionType}.`
-                : `Your submission for Contest ${contestId} was submitted but is ${submissionType}.`;
+
+        let message = "";
+
+        if (submissionType === "valid") {
+            const users = await userModel.find().lean();
+
+            const leaderboard = [];
+
+            users.forEach(user => {
+                if (!user.contestHistory || user.contestHistory.length === 0) return;
+
+                const validContests = user.contestHistory.filter(ch => ch.submissionType === "valid");
+                if (validContests.length === 0) return;
+
+                const totalScore = validContests.reduce((acc, ch) => acc + (ch.score || 0), 0);
+
+                let earliestSubmission = null;
+                validContests.forEach(ch => {
+                    if (ch.date) {
+                        if (!earliestSubmission || new Date(ch.date) < new Date(earliestSubmission)) {
+                            earliestSubmission = ch.date;
+                        }
+                    }
+                });
+
+                leaderboard.push({
+                    userId: user._id.toString(),
+                    name: user.name || "Unknown",
+                    totalScore,
+                    earliestSubmission,
+                });
+            });
+
+            leaderboard.sort((a, b) => {
+                if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+                if (a.earliestSubmission && b.earliestSubmission) {
+                    return new Date(a.earliestSubmission) - new Date(b.earliestSubmission);
+                }
+                return 0;
+            });
+
+            const rankIndex = leaderboard.findIndex(u => u.userId === userId);
+            const userRank = rankIndex !== -1 ? rankIndex + 1 : null;
+
+            const totalScore = leaderboard.find(u => u.userId === userId)?.totalScore || score;
+
+            message = `Contest ${contestId} submitted successfully! Your score: ${score}. Total score: ${totalScore}. Current rank: ${userRank}.`;
+
+        } else {
+            message = `Your submission for Contest ${contestId} was submitted but is not valid.`;
+        }
 
         await addNotification(userId, message);
+
         return res.status(200).json({
             success: true,
-            message: `Contest ID ${contestId} submitted successfully as ${submissionType}`,
+            submissionType,
+            score,
+            message,
         });
+
     } catch (error) {
         console.error("Error submitting contest:", error);
-        res.status(500).json({ success: false, message: "Server error" });
+        return res.status(500).json({ success: false, message: "Server error" });
     }
 };
+
 
 
 const progressContestByUser = async (req, res) => {
@@ -1017,6 +1069,7 @@ const progressContestByUser = async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error", error: error.message });
     }
 };
+
 
 const getUserRank = async (req, res) => {
     try {
@@ -1076,6 +1129,7 @@ const getUserRank = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
 };
+
 
 const getGlobalLeaderboard = async (req, res) => {
     try {

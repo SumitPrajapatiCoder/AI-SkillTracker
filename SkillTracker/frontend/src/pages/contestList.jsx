@@ -5,12 +5,35 @@ import { FaTrophy, FaLock, FaPlayCircle, FaCalendarAlt } from "react-icons/fa";
 import "../styles/contestList.css";
 
 const ContestList = () => {
+    const [languages, setLanguages] = useState([]);
     const [contests, setContests] = useState([]);
     const [leaderboard, setLeaderboard] = useState([]);
     const [userRank, setUserRank] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const navigate = useNavigate();
+
+
+    useEffect(() => {
+        const fetchLanguages = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) throw new Error("No token found");
+
+                const res = await axios.get("/api/v1/user/get-languages", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (res.data.success && res.data.data) {
+                    setLanguages(res.data.data);
+                }
+            } catch (err) {
+                console.error("Failed to load languages:", err);
+            }
+        };
+
+        fetchLanguages();
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -59,6 +82,21 @@ const ContestList = () => {
     return (
         <section className="contest-list-wrapper">
             <h2><FaTrophy style={{ marginRight: "8px" }} /> Contests</h2>
+            <div className="language-list">
+                <h3>In Contest Questions Are Based On These Languages</h3>
+                {languages.length > 0 ? (
+                    <div className="language-tags">
+                        {languages.map((lang) => (
+                            <span key={lang._id} className="language-tag">
+                                {lang.name}
+                            </span>
+                        ))}
+                    </div>
+                ) : (
+                    <p>No languages found</p>
+                )}
+            </div>
+
 
             <div className="contest-list-grid">
                 {contests.map((contest) => {

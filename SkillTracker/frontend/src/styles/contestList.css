@@ -334,6 +334,43 @@
   background-color: #2f3848;
 }
 
+
+.language-list {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.language-list h3 {
+    font-size: 1.2rem;
+    color: #60a5fa;
+    margin-bottom: 15px;
+}
+
+.language-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.language-tag {
+    background: linear-gradient(90deg, #3b82f6, #06b6d4);
+    color: #fff;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: default;
+}
+
+.language-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+
+
 @media (max-width: 768px) {
   .global-leaderboard table {
     font-size: 0.85rem;

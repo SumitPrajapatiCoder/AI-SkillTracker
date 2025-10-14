@@ -18,6 +18,7 @@ const Contest = () => {
   const [timer, setTimer] = useState(0);
 
   const intervalRef = useRef(null);
+  const hasSubmittedRef = useRef(false);
 
   useEffect(() => {
     const fetchContest = async () => {
@@ -39,8 +40,7 @@ const Contest = () => {
           const savedAnswers = localStorage.getItem(`contest-${id}-answers`);
           if (savedAnswers) setAnswers(JSON.parse(savedAnswers));
 
-          const savedCompleted = localStorage.getItem(`contest-${id}-completed`);
-          if (savedCompleted === "true") setCompleted(true);
+          
         } else {
           toast.error(res.data.message);
         }
@@ -79,12 +79,13 @@ const Contest = () => {
 
   useEffect(() => {
     const submitContest = async () => {
-      if (!completed || questions.length === 0) return;
+      if (!completed || questions.length === 0 || hasSubmittedRef.current) return;
+
+      hasSubmittedRef.current = true;
 
       clearInterval(intervalRef.current);
       localStorage.removeItem(`contest-${id}-timer`);
       localStorage.removeItem(`contest-${id}-answers`);
-      localStorage.setItem(`contest-${id}-completed`, "true");
 
       const correctCount = questions.reduce(
         (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
@@ -100,7 +101,7 @@ const Contest = () => {
 
       try {
         const token = localStorage.getItem("token");
-        await axios.post(
+        const res = await axios.post(
           "/api/v1/user/contestSubmit",
           {
             contestId: contest._id,
@@ -111,15 +112,22 @@ const Contest = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        toast.success("Contest submitted successfully!");
+        if (res.data.message?.includes("not valid")) {
+          setContest((prev) => ({ ...prev, invalidSubmission: true }));
+          toast.warning(res.data.message); 
+        } else {
+          toast.success(res.data.message || "Contest submitted successfully!");
+        }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to save contest result");
+        toast.error(err.response?.data?.message || "Failed to save contest result");
       }
     };
 
     submitContest();
   }, [completed, questions, answers, contest, id]);
+
+
 
   const handleAnswer = (selected) => {
     setAnswers((prev) => ({ ...prev, [current]: selected }));
@@ -147,10 +155,24 @@ const Contest = () => {
   const seconds = timer % 60;
 
   if (completed) {
+    const isInvalid = contest?.invalidSubmission;
+
     return (
       <section className="contest-page-complete">
-        <h3>Your contest has been submitted successfully!</h3>
-        <p>Results will be visible once the leaderboard is published.</p>
+        {isInvalid ? (
+          <>
+            <h3>Invalid Submission</h3>
+            <p>
+              {`Your submission for Contest ${contest._id.slice(-6).toUpperCase()} was submitted but is not valid.`}
+            </p>
+          </>
+        ) : (
+          <>
+            <h3>Your contest has been submitted successfully!</h3>
+            <p>Results will be visible once the leaderboard is published.</p>
+          </>
+        )}
+
         <button
           className="contest-page-back-btn"
           onClick={() => navigate("/contestList")}
@@ -160,6 +182,9 @@ const Contest = () => {
       </section>
     );
   }
+
+
+
 
   const q = questions[current];
   const highlightedHTML = hljs.highlightAuto(q.question).value;

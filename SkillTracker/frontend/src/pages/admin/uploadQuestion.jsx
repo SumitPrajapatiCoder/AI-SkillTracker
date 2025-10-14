@@ -30,7 +30,6 @@ const AdminUpload = () => {
 
   const difficulties = ["Easy", "Medium", "Hard"];
 
-  // Highlight questions whenever AI questions update
   useEffect(() => {
     hljs.highlightAll();
   }, [aiQuestions]);
