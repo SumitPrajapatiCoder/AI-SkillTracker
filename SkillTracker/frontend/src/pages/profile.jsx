@@ -176,6 +176,12 @@ const Profile = () => {
     }
   };
 
+  const handleCancelUpload = () => {
+    setPreviewImage(null);
+    setSelectedFile(null);
+  };
+
+
   const handleDeleteImage = async () => {
     const result = await MySwal.fire({
       title: "Are you sure?",
@@ -242,14 +248,6 @@ const Profile = () => {
   return (
     <div className="profile-page">
       <div className="profile-main">
-        {userRank && (
-          <div className="user-rank">
-            <h3><FaTrophy style={{ marginRight: "6px" }} /> Your Rank</h3>
-            <p>
-              <strong>Rank:</strong> {userRank.rank} | <strong>Name:</strong> {userRank.name} | <strong>Total Score:</strong> {userRank.totalScore}
-            </p>
-          </div>
-        )}
 
         <div className="profile-header">
           <div className="avatar-wrapper">
@@ -275,12 +273,18 @@ const Profile = () => {
 
         {previewImage && (
           <div className="preview-section">
-            <img src={previewImage} alt="Preview" />
-            <button onClick={handleImageUpload} className="save-btn">
-              Upload
-            </button>
+            <img src={previewImage} alt="Preview" className="preview-img" />
+            <div className="preview-buttons">
+              <button onClick={handleImageUpload} className="save-btn">
+                Upload
+              </button>
+              <button onClick={handleCancelUpload} className="cancel-btn">
+                Cancel
+              </button>
+            </div>
           </div>
         )}
+
 
         <div className="profile-info">
           {!editMode ? (
@@ -329,6 +333,16 @@ const Profile = () => {
             </div>
           )}
         </div>
+
+
+        {userRank && (
+          <div className="user-rank">
+            <h3><FaTrophy style={{ marginRight: "6px" }} /> Your Rank</h3>
+            <p>
+              <strong>Rank:</strong> {userRank.rank} | <strong>Name:</strong> {userRank.name} | <strong>Total Score:</strong> {userRank.totalScore}
+            </p>
+          </div>
+        )}
 
         <div className="stats-section">
           <h3>Quiz Progress</h3>
