@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/profile.css";
-import { FaPen, FaCamera, FaTrophy } from "react-icons/fa";
+import { FaPen, FaCamera, FaTrophy, FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Bar, Line } from "react-chartjs-2";
@@ -14,27 +15,49 @@ import {
   Title,
   Tooltip,
   Legend,
-  PointElement, LineElement
+  PointElement,
+  LineElement,
 } from "chart.js";
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
-
 import { Table, Tag } from "antd";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 const MySwal = withReactContent(Swal);
 
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [progress, setProgress] = useState({});
   const [mockList, setMockList] = useState([]);
   const [contestProgress, setContestProgress] = useState([]);
   const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
+  const [verifiedOldPassword, setVerifiedOldPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [userRank, setUserRank] = useState(null);
+
+  const [showOldPass, setShowOldPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -45,14 +68,17 @@ const Profile = () => {
           { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
         setUser(res.data.data);
-        setFormData({ name: res.data.data.name, email: res.data.data.email });
+        setFormData({
+          ...formData,
+          name: res.data.data.name,
+          email: res.data.data.email,
+        });
       } catch {
         toast.error("Failed to load user data");
       }
     };
     fetchUser();
   }, []);
-
 
   useEffect(() => {
     const fetchUserRank = async () => {
@@ -61,17 +87,13 @@ const Profile = () => {
         const { data } = await axios.get("/api/v1/user/user-rank", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (data.success && data.userRank) {
-          setUserRank(data.userRank);
-        }
+        if (data.success && data.userRank) setUserRank(data.userRank);
       } catch (err) {
         console.error("Failed to fetch user rank:", err);
       }
     };
     fetchUserRank();
   }, []);
-
 
 
   useEffect(() => {
@@ -104,6 +126,8 @@ const Profile = () => {
             language: m.language,
             completed: !!completedMock,
             date: completedMock?.date || "",
+            questions: m.questions,
+            time: m.time,
           };
         });
         setMockList(mocks);
@@ -123,7 +147,6 @@ const Profile = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         setContestProgress(res.data.data || []);
-
       } catch {
         toast.error("Failed to load contest progress");
       }
@@ -131,20 +154,51 @@ const Profile = () => {
     fetchContestProgress();
   }, []);
 
-
-  const handleUpdate = async () => {
+  const handleVerifyOldPassword = async () => {
     try {
-      const res = await axios.put("/api/v1/user/update_profile", formData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      setUser(res.data.data);
-      setEditMode(false);
-      toast.success("Profile updated successfully!");
-    } catch {
-      toast.error("Failed to update profile");
+      if (!formData.oldPassword) return toast.error("Enter current password first");
+      const res = await axios.post(
+        "/api/v1/user/verify-password",
+        { oldPassword: formData.oldPassword },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
+      if (res.data.success) {
+        setVerifiedOldPassword(true);
+        toast.success("Password verified! Enter new password below.");
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Old password is incorrect");
     }
   };
 
+  const handleUpdate = async () => {
+    try {
+      if (verifiedOldPassword && formData.newPassword !== formData.confirmPassword) {
+        return toast.error("New password and confirm password do not match!");
+      }
+
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        ...(verifiedOldPassword && formData.newPassword
+          ? { newPassword: formData.newPassword }
+          : {}),
+      };
+
+      const res = await axios.put("/api/v1/user/update_profile", payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+
+      setUser(res.data.data);
+      setEditMode(false);
+      setShowPasswordFields(false);
+      setVerifiedOldPassword(false);
+      toast.success("Profile updated successfully!");
+      setFormData({ ...formData, oldPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update profile");
+    }
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -154,14 +208,11 @@ const Profile = () => {
   };
 
   const handleImageUpload = async () => {
-    if (!selectedFile) {
-      toast.error("Please select an image first");
-      return;
-    }
-    const formData = new FormData();
-    formData.append("image", selectedFile);
+    if (!selectedFile) return toast.error("Please select an image first");
+    const formDataImage = new FormData();
+    formDataImage.append("image", selectedFile);
     try {
-      const res = await axios.put("/api/v1/user/upload_profile_image", formData, {
+      const res = await axios.put("/api/v1/user/upload_profile_image", formDataImage, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -181,7 +232,6 @@ const Profile = () => {
     setSelectedFile(null);
   };
 
-
   const handleDeleteImage = async () => {
     const result = await MySwal.fire({
       title: "Are you sure?",
@@ -192,7 +242,6 @@ const Profile = () => {
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Yes, delete it!",
     });
-
     if (!result.isConfirmed) return;
 
     try {
@@ -224,17 +273,29 @@ const Profile = () => {
   };
 
   const mockColumns = [
-    { title: "Language", dataIndex: "language", key: "language" },
+    {
+      title: "Language",
+      dataIndex: "language",
+      key: "language",
+      render: (language, record) => (
+        <span
+          className="mock-language-link"
+          onClick={() =>
+            navigate(`/mock_test/${record.language}`, {
+              state: { cardQuestions: record.questions, cardTime: record.time },
+            })
+          }
+        >
+          {language}
+        </span>
+      ),
+    },
     {
       title: "Completed",
       dataIndex: "completed",
       key: "completed",
       render: (completed) =>
-        completed ? (
-          <Tag color="green">Yes</Tag>
-        ) : (
-          <Tag color="red">No</Tag>
-        ),
+        completed ? <Tag color="green">Yes</Tag> : <Tag color="red">No</Tag>,
     },
     {
       title: "Date",
@@ -248,7 +309,6 @@ const Profile = () => {
   return (
     <div className="profile-page">
       <div className="profile-main">
-
         <div className="profile-header">
           <div className="avatar-wrapper">
             <img
@@ -285,13 +345,20 @@ const Profile = () => {
           </div>
         )}
 
-
         <div className="profile-info">
           {!editMode ? (
             <>
-              <p><strong>Profile ID:</strong> {user?._id}</p>
-              <p><strong>Joined:</strong> {new Date(user?.createdAt).toLocaleDateString("en-GB")} </p>
-              <p><strong>Last Updated:</strong> {new Date(user?.updatedAt).toLocaleDateString("en-GB")}</p>
+              <p>
+                <strong>Profile ID:</strong> {user?._id}
+              </p>
+              <p>
+                <strong>Joined:</strong>{" "}
+                {new Date(user?.createdAt).toLocaleDateString("en-GB")}{" "}
+              </p>
+              <p>
+                <strong>Last Updated:</strong>{" "}
+                {new Date(user?.updatedAt).toLocaleDateString("en-GB")}
+              </p>
               {user?.isAdmin && <p><strong>Role:</strong> Admin</p>}
               <button className="edit-profile-btn" onClick={() => setEditMode(true)}>
                 <FaPen /> Edit Profile
@@ -302,21 +369,97 @@ const Profile = () => {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="profile-input"
                 placeholder="Enter Name"
               />
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="profile-input"
                 placeholder="Enter Email"
               />
+
+                <button
+                  type="button"
+                  className="toggle-password-btn"
+                  onClick={() => setShowPasswordFields(!showPasswordFields)}
+                >
+                  {showPasswordFields ? "Cancel Password Change" : "Change Password"}
+                </button>
+
+                {showPasswordFields && (
+                  <>
+                    {!verifiedOldPassword ? (
+                      <div className="password-verification">
+                        <div className="password-input-wrapper">
+                          <input
+                            type={showOldPass ? "text" : "password"}
+                            value={formData.oldPassword}
+                            onChange={(e) =>
+                              setFormData({ ...formData, oldPassword: e.target.value })
+                            }
+                            className="profile-input"
+                            placeholder="Current Password"
+                          />
+                          <span
+                            className="show-hide-icon"
+                            onClick={() => setShowOldPass(!showOldPass)}
+                          >
+                            {showOldPass ? <FaEyeSlash /> : <FaEye />}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          className="verify-btn"
+                          onClick={handleVerifyOldPassword}
+                        >
+                          Verify
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="password-input-wrapper">
+                          <input
+                            type={showNewPass ? "text" : "password"}
+                            value={formData.newPassword}
+                            onChange={(e) =>
+                              setFormData({ ...formData, newPassword: e.target.value })
+                            }
+                            className="profile-input"
+                            placeholder="New Password"
+                          />
+                          <span
+                            className="show-hide-icon"
+                            onClick={() => setShowNewPass(!showNewPass)}
+                          >
+                            {showNewPass ? <FaEyeSlash /> : <FaEye />}
+                          </span>
+                        </div>
+
+                        <div className="password-input-wrapper">
+                          <input
+                            type={showConfirmPass ? "text" : "password"}
+                            value={formData.confirmPassword}
+                            onChange={(e) =>
+                              setFormData({ ...formData, confirmPassword: e.target.value })
+                            }
+                            className="profile-input"
+                            placeholder="Confirm New Password"
+                          />
+                          <span
+                            className="show-hide-icon"
+                            onClick={() => setShowConfirmPass(!showConfirmPass)}
+                          >
+                            {showConfirmPass ? <FaEyeSlash /> : <FaEye />}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </>
+              )}
+
               <div className="edit-buttons">
                 <button className="save-btn" onClick={handleUpdate}>
                   Save
@@ -334,12 +477,14 @@ const Profile = () => {
           )}
         </div>
 
-
         {userRank && (
           <div className="user-rank">
-            <h3><FaTrophy style={{ marginRight: "6px" }} /> Your Rank</h3>
+            <h3>
+              <FaTrophy style={{ marginRight: "6px" }} /> Your Rank
+            </h3>
             <p>
-              <strong>Rank:</strong> {userRank.rank} | <strong>Name:</strong> {userRank.name} | <strong>Total Score:</strong> {userRank.totalScore}
+              <strong>Rank:</strong> {userRank.rank} | <strong>Name:</strong>{" "}
+              {userRank.name} | <strong>Total Score:</strong> {userRank.totalScore}
             </p>
           </div>
         )}
@@ -381,29 +526,20 @@ const Profile = () => {
                       label: function (context) {
                         const idx = context.dataIndex;
                         const c = contestProgress[idx];
-                        console.log(c); 
                         return [
                           `Contest Id: ${c.contestId}`,
                           `Score: ${c.score}/${c.totalQuestions}`,
                           `Percentage: ${c.percentage}%`,
                           `Date: ${new Date(c.date).toLocaleDateString("en-GB")}`,
                         ];
-                      }
-
+                      },
                     },
                   },
-                  title: {
-                    display: true,
-                    text: "Your Contest Performance Trend",
-                  },
+                  title: { display: true, text: "Your Contest Performance Trend" },
                   legend: { display: false },
                 },
                 scales: {
-                  y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: { display: true, text: "Percentage (%)" },
-                  },
+                  y: { beginAtZero: true, max: 100, title: { display: true, text: "Percentage (%)" } },
                   x: { title: { display: true, text: "Contest" } },
                 },
               }}
@@ -412,8 +548,6 @@ const Profile = () => {
             <p className="no-data">No valid contest data yet.</p>
           )}
         </div>
-
-
 
         <div className="mock-section">
           <h3>Mock Test Summary</h3>

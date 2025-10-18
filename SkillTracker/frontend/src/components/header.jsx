@@ -53,7 +53,7 @@ const Header = () => {
 
   useEffect(() => {
     fetchNotificationCount();
-    const interval = setInterval(fetchNotificationCount, 5000);
+    const interval = setInterval(fetchNotificationCount, 3000);
     return () => clearInterval(interval);
   }, []);
 

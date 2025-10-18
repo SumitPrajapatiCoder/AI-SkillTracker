@@ -96,27 +96,57 @@ const getUserInfo = async (req, res) => {
 };
 
 
-const updateProfileController = async (req, res) => {
+const verifyPasswordController = async (req, res) => {
     try {
         const userId = req.userId;
-        const { name, email } = req.body;
+        const { oldPassword } = req.body;
 
-        if (!name || !email) {
-            return res
-                .status(400)
-                .send({ success: false, message: "Name and Email are required" });
+        if (!oldPassword) {
+            return res.status(400).send({ success: false, message: "Old password is required" });
         }
 
         const user = await userModel.findById(userId);
         if (!user) {
-            return res
-                .status(404)
-                .send({ success: false, message: "User not found" });
+            return res.status(404).send({ success: false, message: "User not found" });
+        }
+
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).send({ success: false, message: "Current password is incorrect" });
+        }
+    
+        await addNotification(userId, "Password Verified Successfully !!")
+        res.status(200).send({ success: true, message: "Password verified" });
+    } catch (error) {
+        console.error("Verify Password Error:", error);
+        res.status(500).send({ success: false, message: "Internal Server Error" });
+    }
+};
+
+const updateProfileController = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { name, email, newPassword } = req.body;
+
+        if (!name || !email) {
+            return res.status(400).send({ success: false, message: "Name and Email are required" });
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).send({ success: false, message: "User not found" });
         }
 
         user.name = name;
         user.email = email;
+
+        if (newPassword) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(newPassword, salt);
+        }
+
         await user.save();
+        await addNotification(userId, "Update Profile Successfully !!")
 
         const updatedUser = await userModel.findById(userId).select("-password");
 
@@ -127,11 +157,10 @@ const updateProfileController = async (req, res) => {
         });
     } catch (error) {
         console.error("Update Profile Error:", error);
-        res
-            .status(500)
-            .send({ success: false, message: "Internal Server Error" });
+        res.status(500).send({ success: false, message: "Internal Server Error" });
     }
 };
+
 
 
 const uploadProfileImageController = async (req, res) => {
@@ -1200,5 +1229,5 @@ module.exports = {
     saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,
     getMockCardDetails, getQuizCardDetails, progressContestByUser,getUserRank,
     addNotification,getNotifications,markAsRead,deleteNotification,
-    deleteAllNotifications,getContestUser,submitContest,getAllContests
+    deleteAllNotifications, getContestUser, submitContest, getAllContests,verifyPasswordController
  };

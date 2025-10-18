@@ -3,7 +3,7 @@ const { loginController, registerController,getUserInfo,generateRoadMap,getStudy
     getRoadmaps, saveRoadmap, getLanguages, getMockCardDetails, getQuizCardDetails,getCompletedMocks,clearChatHistory,
 updateProfileController,saveMockResult,getMockStatus,saveQuizResult,generateStudyPlan,chatbotController,getChatHistory,
     getUserProgress, getNotifications, markAsRead, deleteAllNotifications, uploadProfileImageController, deleteProfileImageController,
-    getAllContests, getContestUser, submitContest, getGlobalLeaderboard,progressContestByUser,getUserRank} = require("../controller/userControl");
+    getAllContests, getContestUser, submitContest, getGlobalLeaderboard,progressContestByUser,getUserRank,verifyPasswordController} = require("../controller/userControl");
 const authMiddleware = require("../middleware/authMiddleware");
 const { upload } = require("../config/cloudinary");
 
@@ -16,7 +16,7 @@ router.post('/get_User_data', authMiddleware, getUserInfo);
 router.put('/update_profile', authMiddleware, updateProfileController);
 router.put("/upload_profile_image",authMiddleware,upload.single("image"),uploadProfileImageController);
 router.delete("/delete_profile_image", authMiddleware, deleteProfileImageController);
-
+router.post("/verify-password", authMiddleware, verifyPasswordController);
 
 router.get("/get-languages", authMiddleware, getLanguages);
 
