@@ -4,7 +4,7 @@ import "../../styles/userList.css";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
-import { Table, Button, Tag, Space, Input } from "antd";
+import { Table, Button, Tag, Space } from "antd";
 import { useNavigate } from "react-router-dom";
 import {
   DeleteOutlined,
@@ -16,12 +16,13 @@ import {
 } from "@ant-design/icons";
 
 const MySwal = withReactContent(Swal);
-const { Search } = Input;
 
 const AdminUserList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 3;
   const navigate = useNavigate();
 
   const fetchUsers = async () => {
@@ -32,6 +33,7 @@ const AdminUserList = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data.data);
+      setCurrentPage(1);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load users");
@@ -39,6 +41,10 @@ const AdminUserList = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleAdminToggle = async (id) => {
     try {
@@ -51,11 +57,7 @@ const AdminUserList = () => {
       toast.success("User role updated");
       fetchUsers();
     } catch (err) {
-      if (err.response?.data?.message) {
-        toast.error(err.response.data.message);
-      } else {
-        toast.error("Failed to update role");
-      }
+      toast.error(err.response?.data?.message || "Failed to update role");
     }
   };
 
@@ -65,11 +67,7 @@ const AdminUserList = () => {
       const url = isBlocked
         ? `/api/v1/admin/unblock-user/${id}`
         : `/api/v1/admin/block-user/${id}`;
-      await axios.put(
-        url,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await axios.put(url, {}, { headers: { Authorization: `Bearer ${token}` } });
       toast.success(isBlocked ? "User unblocked" : "User blocked");
       fetchUsers();
     } catch (err) {
@@ -104,15 +102,16 @@ const AdminUserList = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const filteredUsers = users.filter(
     (user) =>
       user.name?.toLowerCase().includes(searchText.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchText.toLowerCase())
   );
+
+  const indexOfLast = currentPage * usersPerPage;
+  const indexOfFirst = indexOfLast - usersPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
   const columns = [
     {
@@ -150,22 +149,18 @@ const AdminUserList = () => {
       ],
       onFilter: (value, record) => record.isBlocked === value,
       render: (isBlocked) =>
-        isBlocked ? (
-          <Tag color="red">Blocked</Tag>
-        ) : (
-          <Tag color="green">Active</Tag>
-        ),
+        isBlocked ? <Tag color="red">Blocked</Tag> : <Tag color="green">Active</Tag>,
     },
     {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
-        <Space>
+        <Space wrap>
           <Button
             type={record.isBlocked ? "default" : "primary"}
             icon={record.isBlocked ? <CheckOutlined /> : <StopOutlined />}
             onClick={() => handleBlockToggle(record._id, record.isBlocked)}
-            disabled={record.isAdmin} 
+            disabled={record.isAdmin}
           >
             {record.isBlocked ? "Unblock" : "Block"}
           </Button>
@@ -182,10 +177,11 @@ const AdminUserList = () => {
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record._id)}
-            disabled={record.isAdmin} 
+            disabled={record.isAdmin}
           >
             Delete
           </Button>
+
           <Button
             type="dashed"
             icon={<InfoCircleOutlined />}
@@ -193,11 +189,9 @@ const AdminUserList = () => {
           >
             Info
           </Button>
-
         </Space>
       ),
-    }
-
+    },
   ];
 
   return (
@@ -205,32 +199,77 @@ const AdminUserList = () => {
       <h2 className="page-title">All Registered Users</h2>
 
       <div className="search-bar-wrapper">
-        <Search
+        <input
+          type="text"
           placeholder="Search by name or email"
-          allowClear
+          value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          className="search-input"
+          className="custom-search-input"
         />
       </div>
 
-     
       <Table
         columns={columns}
-        dataSource={filteredUsers}
+        dataSource={currentUsers}
         rowKey="_id"
         loading={loading}
-        pagination={{
-          pageSize: 8,
-          position: ["bottomCenter"],
-        }}
+        pagination={false}
         bordered
         className="user-table"
         scroll={{ x: "max-content" }}
       />
 
+      {totalPages > 1 && (
+        <div className="pagination">
+          <Button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            Prev
+          </Button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(
+              (page) =>
+                page === 1 ||
+                page === totalPages ||
+                (page >= currentPage - 1 && page <= currentPage + 1)
+            )
+            .map((page, i, arr) => {
+              if (i > 0 && page - arr[i - 1] > 1) {
+                return (
+                  <React.Fragment key={page}>
+                    <span className="dots">...</span>
+                    <Button
+                      type={currentPage === page ? "primary" : "default"}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  </React.Fragment>
+                );
+              }
+              return (
+                <Button
+                  key={page}
+                  type={currentPage === page ? "primary" : "default"}
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </Button>
+              );
+            })}
+
+          <Button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
     </div>
   );
-
 };
 
 export default AdminUserList;

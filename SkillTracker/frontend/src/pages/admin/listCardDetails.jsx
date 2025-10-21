@@ -17,6 +17,9 @@ const ListCardDetails = () => {
   const [editMode, setEditMode] = useState(null);
   const [editForm, setEditForm] = useState({});
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const cardsPerPage = 6;
+
   const fetchCards = async () => {
     try {
       setLoading(true);
@@ -33,11 +36,12 @@ const ListCardDetails = () => {
       const data = res.data.data || [];
       const filteredData = search
         ? data.filter((c) =>
-            c.language.toLowerCase().includes(search.toLowerCase())
-          )
+          c.language.toLowerCase().includes(search.toLowerCase())
+        )
         : data;
 
       setCards(filteredData);
+      setCurrentPage(1); 
     } catch (err) {
       console.error("Fetch Cards Error:", err.response?.data || err.message);
       toast.error("Failed to load card details");
@@ -107,6 +111,17 @@ const ListCardDetails = () => {
     }
   };
 
+  const totalPages = Math.ceil(cards.length / cardsPerPage);
+  const indexOfLast = currentPage * cardsPerPage;
+  const indexOfFirst = indexOfLast - cardsPerPage;
+  const currentCards = cards.slice(indexOfFirst, indexOfLast);
+
+  const handlePageChange = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="list-card-container">
       <h2>All {type === "quiz" ? "Quiz" : "Mock"} Cards</h2>
@@ -129,81 +144,133 @@ const ListCardDetails = () => {
         </button>
       </div>
 
-      {cards.length === 0 ? (
+      {currentCards.length === 0 ? (
         <p>No {type === "quiz" ? "Quiz" : "Mock"} cards found.</p>
       ) : (
-        <div className="card-grid">
-          {cards.map((card) => (
-            <div
-              key={card._id}
-              className="card"
-              style={{ position: "relative" }}
-            >
-              {editMode === card._id ? (
-                <>
-                  <input
-                    type="text"
-                    value={editForm.language}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, language: e.target.value })
-                    }
-                  />
-                  <input
-                    type="number"
-                    min="1"
-                    value={editForm.questions}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, questions: e.target.value })
-                    }
-                  />
-                  <input
-                    type="number"
-                    min="1"
-                    value={editForm.time}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, time: e.target.value })
-                    }
-                  />
-                  <div className="edit-buttons">
-                    <button onClick={handleUpdate} className="save-btn">
-                      Save
-                    </button>
+        <>
+          <div className="card-grid">
+            {currentCards.map((card) => (
+              <div
+                key={card._id}
+                className="card"
+                style={{ position: "relative" }}
+              >
+                {editMode === card._id ? (
+                  <>
+                    <input
+                      type="text"
+                      value={editForm.language}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, language: e.target.value })
+                      }
+                    />
+                    <input
+                      type="number"
+                      min="1"
+                      value={editForm.questions}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, questions: e.target.value })
+                      }
+                    />
+                    <input
+                      type="number"
+                      min="1"
+                      value={editForm.time}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, time: e.target.value })
+                      }
+                    />
+                    <div className="edit-buttons">
+                      <button onClick={handleUpdate} className="save-btn">
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditMode(null)}
+                        className="cancel-btn"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <FaPen
+                      onClick={() => startEdit(card)}
+                      style={{
+                        position: "absolute",
+                        top: "10px",
+                        right: "10px",
+                        cursor: "pointer",
+                        color: "#007bff",
+                      }}
+                    />
+                    <h3>{card.language}</h3>
+                    <p>Questions: {card.questions}</p>
+                    <p>Time: {card.time} minutes</p>
+                    <div className="card-actions">
+                      <button
+                        onClick={() => handleDelete(card._id)}
+                        className="delete-btn"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Prev
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(
+                  (page) =>
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)
+                )
+                .map((page, i, arr) => {
+                  if (i > 0 && page - arr[i - 1] > 1) {
+                    return (
+                      <React.Fragment key={page}>
+                        <span className="dots">...</span>
+                        <button
+                          onClick={() => handlePageChange(page)}
+                          className={currentPage === page ? "active" : ""}
+                        >
+                          {page}
+                        </button>
+                      </React.Fragment>
+                    );
+                  }
+                  return (
                     <button
-                      onClick={() => setEditMode(null)}
-                      className="cancel-btn"
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={currentPage === page ? "active" : ""}
                     >
-                      Cancel
+                      {page}
                     </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <FaPen
-                    onClick={() => startEdit(card)}
-                    style={{
-                      position: "absolute",
-                      top: "10px",
-                      right: "10px",
-                      cursor: "pointer",
-                      color: "#007bff",
-                    }}
-                  />
-                  <h3>{card.language}</h3>
-                  <p>Questions: {card.questions}</p>
-                  <p>Time: {card.time} minutes</p>
-                  <div className="card-actions">
-                    <button
-                      onClick={() => handleDelete(card._id)}
-                      className="delete-btn"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </>
-              )}
+                  );
+                })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );

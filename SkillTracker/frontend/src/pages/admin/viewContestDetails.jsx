@@ -10,11 +10,11 @@ import withReactContent from "sweetalert2-react-content";
 
 const MySwal = withReactContent(Swal);
 
-
 const ContestView = () => {
     const [contests, setContests] = useState([]);
     const [loading, setLoading] = useState(false);
-
+    const [currentPage, setCurrentPage] = useState(1);
+    const contestsPerPage = 1; 
     const fetchContests = async () => {
         setLoading(true);
         try {
@@ -71,7 +71,16 @@ const ContestView = () => {
         }
     };
 
-    
+    const totalPages = Math.ceil(contests.length / contestsPerPage);
+    const indexOfLast = currentPage * contestsPerPage;
+    const indexOfFirst = indexOfLast - contestsPerPage;
+    const currentContests = contests.slice(indexOfFirst, indexOfLast);
+
+    const handlePageChange = (page) => {
+        if (page < 1 || page > totalPages) return;
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
 
     return (
         <div className="view-container">
@@ -80,7 +89,7 @@ const ContestView = () => {
             {loading && <p>Loading contests...</p>}
             {!loading && contests.length === 0 && <p>No contests found.</p>}
 
-            {contests.map((contest, idx) => (
+            {currentContests.map((contest, idx) => (
                 <div key={idx} className="contest-card">
                     <div className="contest-header">
                         <p className="contest-no"><strong>Contest No. {contest._id.slice(-5)}</strong></p>
@@ -88,8 +97,6 @@ const ContestView = () => {
                         <p className="time-duration"><strong>Time Duration:</strong> {contest.timeDuration} minutes</p>
                         <p className="publish-date"><strong>Published Date & Time:</strong> {contest.publishDetails.formatted}</p>
                     </div>
-
-
 
                     <h3>Questions:</h3>
                     <div className="questions-list">
@@ -120,9 +127,56 @@ const ContestView = () => {
                     </button>
                 </div>
             ))}
+
+            {totalPages > 1 && (
+                <div className="pagination">
+                    <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                    >
+                        Prev
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((page) => {
+                            return page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                        })
+                        .map((page, i, arr) => {
+                            if (i > 0 && page - arr[i - 1] > 1) {
+                                return (
+                                    <React.Fragment key={page}>
+                                        <span style={{ padding: "0 4px" }}>...</span>
+                                        <button
+                                            onClick={() => handlePageChange(page)}
+                                            className={currentPage === page ? "active" : ""}
+                                        >
+                                            {page}
+                                        </button>
+                                    </React.Fragment>
+                                );
+                            }
+                            return (
+                                <button
+                                    key={page}
+                                    onClick={() => handlePageChange(page)}
+                                    className={currentPage === page ? "active" : ""}
+                                >
+                                    {page}
+                                </button>
+                            );
+                        })}
+
+                    <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
 
-
 export default ContestView;
+

@@ -169,3 +169,23 @@
     width: 100%;
   }
 }
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  max-width: 400px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-left: 8px;
+}
+
+.search-icon {
+  font-size: 18px;
+  color: #555;
+}

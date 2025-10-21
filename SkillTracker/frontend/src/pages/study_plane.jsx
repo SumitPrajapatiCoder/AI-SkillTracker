@@ -3,6 +3,7 @@ import axios from "axios";
 import StudyPlanText from "./studyText";
 import { toast } from "react-toastify";
 import "../styles/study_plane.css";
+import { FaSearch } from "react-icons/fa"; 
 
 const StudyPlan = () => {
   const [studyPlansByLanguage, setStudyPlansByLanguage] = useState({});
@@ -11,6 +12,7 @@ const StudyPlan = () => {
   const [generatingLang, setGeneratingLang] = useState(null);
   const [savingLang, setSavingLang] = useState(null);
   const [savedPlans, setSavedPlans] = useState(new Set());
+  const [searchQuery, setSearchQuery] = useState(""); 
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -98,6 +100,11 @@ const StudyPlan = () => {
     }
   };
 
+
+  const filteredLanguages = Object.keys(studyPlansByLanguage).filter((lang) =>
+    lang.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading)
     return <div className="loading">Loading your study plans...</div>;
   if (error) return <div className="error">{error}</div>;
@@ -105,52 +112,66 @@ const StudyPlan = () => {
   return (
     <main className="study-plan-container">
       <h1>Your Personalized Study Plans</h1>
-      {Object.keys(studyPlansByLanguage).length === 0 && (
-        <p>No study plans found yet.</p>
+
+      <div className="search-bar">
+        <FaSearch className="search-icon" />
+        <input
+          type="text"
+          placeholder="Search by language..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
+      {filteredLanguages.length === 0 && (
+        <p>No study plans found for "{searchQuery}".</p>
       )}
 
-      {Object.entries(studyPlansByLanguage).map(([language, plan]) => (
-        <section key={language} className="language-section">
-          <h2>{language} Study Plan</h2>
-          {plan ? (
-            <>
-              <StudyPlanText studyPlan={plan} />
-              <div className="button-group">
+      {filteredLanguages.map((language) => {
+        const plan = studyPlansByLanguage[language];
+        return (
+          <section key={language} className="language-section">
+            <h2>{language} Study Plan</h2>
+            {plan ? (
+              <>
+                <StudyPlanText studyPlan={plan} />
+                <div className="button-group">
+                  <button
+                    onClick={() => handleGenerate(language)}
+                    disabled={generatingLang === language}
+                  >
+                    {generatingLang === language
+                      ? "Generating..."
+                      : "Regenerate Plan"}
+                  </button>
+                  <button
+                    onClick={() => handleSave(language)}
+                    disabled={savingLang === language || savedPlans.has(language)}
+                  >
+                    {savingLang === language
+                      ? "Saving..."
+                      : savedPlans.has(language)
+                        ? "Saved"
+                        : "Save Plan"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>No study plan generated yet.</p>
                 <button
                   onClick={() => handleGenerate(language)}
                   disabled={generatingLang === language}
                 >
                   {generatingLang === language
                     ? "Generating..."
-                    : "Regenerate Plan"}
+                    : "Generate Plan"}
                 </button>
-                <button
-                  onClick={() => handleSave(language)}
-                  disabled={savingLang === language || savedPlans.has(language)}
-                >
-                  {savingLang === language
-                    ? "Saving..."
-                    : savedPlans.has(language)
-                    ? "Saved"
-                    : "Save Plan"}
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p>No study plan generated yet.</p>
-              <button
-                onClick={() => handleGenerate(language)}
-                disabled={generatingLang === language}
-              >
-                {generatingLang === language
-                  ? "Generating..."
-                  : "Generate Plan"}
-              </button>
-            </>
-          )}
-        </section>
-      ))}
+              </>
+            )}
+          </section>
+        );
+      })}
     </main>
   );
 };

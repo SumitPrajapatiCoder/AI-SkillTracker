@@ -256,3 +256,33 @@ body {
     width: 100%;
   }
 }
+
+
+
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  gap: 8px;
+}
+
+.pagination button {
+  background-color: #1f1f1f;
+  border: 1px solid #555;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination button:hover {
+  background-color: #007bff;
+}
+
+.pagination button.active {
+  background-color: #007bff;
+  font-weight: bold;
+}
