@@ -19,6 +19,19 @@ app.use('/api/v1/admin', require("./routes/adminRoute"));
 app.use('/api/v1/quiz', require("./routes/quizRoute"));
 
 
+
+
+// Serve frontend in production
+if (process.env.NODE_ENV === "production") {
+    app.use(express.static(path.join(__dirname, "../frontend/dist"))); // Vite build folder
+
+    app.get("*", (req, res) => {
+        res.sendFile(path.resolve(__dirname, "../frontend/dist", "index.html"));
+    });
+}
+
+
+
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${port}`.bgCyan.white);
