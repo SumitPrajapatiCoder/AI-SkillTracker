@@ -195,30 +195,27 @@ const ContestList = () => {
                 })}
             </div>
 
-
+            
             {totalPages > 1 && (
-                <div className="pagination">
+                <div className="contest-pagination-modern">
                     <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
+                        className="contest-page-btn"
                     >
                         Prev
                     </button>
 
-
                     {Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter((page) => {
-                            return page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
-                        })
+                        .filter((page) => page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1))
                         .map((page, i, arr) => {
-
                             if (i > 0 && page - arr[i - 1] > 1) {
                                 return (
                                     <React.Fragment key={page}>
-                                        <span className="dots">...</span>
+                                        <span className="contest-ellipsis">...</span>
                                         <button
                                             onClick={() => handlePageChange(page)}
-                                            className={currentPage === page ? "active" : ""}
+                                            className={`contest-page-btn ${currentPage === page ? "active" : ""}`}
                                         >
                                             {page}
                                         </button>
@@ -229,7 +226,7 @@ const ContestList = () => {
                                 <button
                                     key={page}
                                     onClick={() => handlePageChange(page)}
-                                    className={currentPage === page ? "active" : ""}
+                                    className={`contest-page-btn ${currentPage === page ? "active" : ""}`}
                                 >
                                     {page}
                                 </button>
@@ -239,11 +236,13 @@ const ContestList = () => {
                     <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
+                        className="contest-page-btn"
                     >
                         Next
                     </button>
                 </div>
             )}
+
 
 
             {userRank && (

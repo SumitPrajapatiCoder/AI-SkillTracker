@@ -221,55 +221,59 @@ const ListCardDetails = () => {
             ))}
           </div>
 
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Prev
-              </button>
+          
+            {totalPages > 1 && (
+              <div className="list-pagination">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="list-page-btn"
+                >
+                  Prev
+                </button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(
-                  (page) =>
-                    page === 1 ||
-                    page === totalPages ||
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                )
-                .map((page, i, arr) => {
-                  if (i > 0 && page - arr[i - 1] > 1) {
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(
+                    (page) =>
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                  )
+                  .map((page, i, arr) => {
+                    if (i > 0 && page - arr[i - 1] > 1) {
+                      return (
+                        <React.Fragment key={page}>
+                          <span className="list-dots">...</span>
+                          <button
+                            onClick={() => handlePageChange(page)}
+                            className={`list-page-btn ${currentPage === page ? "list-active" : ""}`}
+                          >
+                            {page}
+                          </button>
+                        </React.Fragment>
+                      );
+                    }
                     return (
-                      <React.Fragment key={page}>
-                        <span className="dots">...</span>
-                        <button
-                          onClick={() => handlePageChange(page)}
-                          className={currentPage === page ? "active" : ""}
-                        >
-                          {page}
-                        </button>
-                      </React.Fragment>
+                      <button
+                        key={page}
+                        onClick={() => handlePageChange(page)}
+                        className={`list-page-btn ${currentPage === page ? "list-active" : ""}`}
+                      >
+                        {page}
+                      </button>
                     );
-                  }
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      className={currentPage === page ? "active" : ""}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
+                  })}
 
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </button>
-            </div>
-          )}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="list-page-btn"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+
         </>
       )}
     </div>

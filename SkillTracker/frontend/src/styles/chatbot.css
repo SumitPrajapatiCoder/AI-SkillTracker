@@ -198,40 +198,6 @@
 .chatbot-container.dark-mode .input-row {
   background: rgba(0, 0, 0, 0.4);
 }
-/* 
-.input-row input {
-  flex: 1;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  outline: none;
-  background: #f8f8f8;
-  transition: box-shadow 0.3s, transform 0.2s;
-}
-
-.input-row input:focus {
-  box-shadow: 0 0 6px rgba(0,123,255,0.6);
-  transform: scale(1.02);
-}
-
-.input-row button {
-  width: 50px;
-  height: 44px;
-  border: none;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #0078ff, #00c6ff);
-  color: white;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: transform 0.2s, background 0.3s;
-}
-
-.input-row button:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #005fcc, #008cff);
-} */
 
 .input-row {
   display: flex;

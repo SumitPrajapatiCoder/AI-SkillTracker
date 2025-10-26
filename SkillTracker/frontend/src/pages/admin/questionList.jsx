@@ -335,8 +335,9 @@ const AdminQuestionList = () => {
             ))}
           </ul>
 
-            <div className="pagination">
+            <div className="question-pagination">
               <button
+                className="question-page-btn"
                 disabled={currentPage === 1}
                 onClick={() => handlePageChange(currentPage - 1)}
               >
@@ -354,9 +355,10 @@ const AdminQuestionList = () => {
                   const prevPage = arr[i - 1];
                   return (
                     <React.Fragment key={page}>
-                      {prevPage && page - prevPage > 1 && <span>...</span>}
+                      {prevPage && page - prevPage > 1 && <span className="question-dots">...</span>}
                       <button
-                        className={currentPage === page ? "active" : ""}
+                        className={`question-page-btn ${currentPage === page ? "question-active" : ""
+                          }`}
                         onClick={() => handlePageChange(page)}
                       >
                         {page}
@@ -366,12 +368,15 @@ const AdminQuestionList = () => {
                 })}
 
               <button
+                className="question-page-btn"
                 disabled={currentPage === totalPages}
                 onClick={() => handlePageChange(currentPage + 1)}
               >
                 Next
               </button>
             </div>
+
+
         </>
       )}
     </div>

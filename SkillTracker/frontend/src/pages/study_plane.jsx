@@ -3,7 +3,7 @@ import axios from "axios";
 import StudyPlanText from "./studyText";
 import { toast } from "react-toastify";
 import "../styles/study_plane.css";
-import { FaSearch } from "react-icons/fa"; 
+import { FaSearch } from "react-icons/fa";
 
 const StudyPlan = () => {
   const [studyPlansByLanguage, setStudyPlansByLanguage] = useState({});
@@ -12,7 +12,11 @@ const StudyPlan = () => {
   const [generatingLang, setGeneratingLang] = useState(null);
   const [savingLang, setSavingLang] = useState(null);
   const [savedPlans, setSavedPlans] = useState(new Set());
-  const [searchQuery, setSearchQuery] = useState(""); 
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 1;
+  const pageWindow = 3;
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -100,10 +104,26 @@ const StudyPlan = () => {
     }
   };
 
-
   const filteredLanguages = Object.keys(studyPlansByLanguage).filter((lang) =>
     lang.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filteredLanguages.length / itemsPerPage);
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentLanguages = filteredLanguages.slice(indexOfFirst, indexOfLast);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const startPage = Math.max(1, currentPage - Math.floor(pageWindow / 2));
+  const endPage = Math.min(totalPages, startPage + pageWindow - 1);
+  const visiblePages = [];
+  for (let i = startPage; i <= endPage; i++) visiblePages.push(i);
 
   if (loading)
     return <div className="loading">Loading your study plans...</div>;
@@ -127,7 +147,7 @@ const StudyPlan = () => {
         <p>No study plans found for "{searchQuery}".</p>
       )}
 
-      {filteredLanguages.map((language) => {
+      {currentLanguages.map((language) => {
         const plan = studyPlansByLanguage[language];
         return (
           <section key={language} className="language-section">
@@ -172,6 +192,64 @@ const StudyPlan = () => {
           </section>
         );
       })}
+
+      {totalPages > 1 && (
+        <div className="pagination-modern">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="page-btn"
+          >
+            Prev
+          </button>
+
+          {startPage > 1 && (
+            <>
+              <button
+                onClick={() => handlePageChange(1)}
+                className={`page-btn ${currentPage === 1 ? "active" : ""}`}
+              >
+                1
+              </button>
+              {startPage > 2 && <span className="ellipsis">...</span>}
+            </>
+          )}
+
+          {visiblePages.map((page) => (
+            <button
+              key={page}
+              className={`page-btn ${page === currentPage ? "active" : ""}`}
+              onClick={() => handlePageChange(page)}
+            >
+              {page}
+            </button>
+          ))}
+
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && <span className="ellipsis">...</span>}
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                className={`page-btn ${currentPage === totalPages ? "active" : ""}`}
+              >
+                {totalPages}
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="page-btn"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+
+
+
     </main>
   );
 };

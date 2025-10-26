@@ -548,35 +548,52 @@
 }
 
 
-
-.pagination {
+.contest-pagination-modern {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 25px 0;
-  gap: 8px;
+  gap: 10px;
+  margin: 30px 0;
+  flex-wrap: wrap;
 }
 
-.pagination button {
-  background-color: #e0e0e0;
+.contest-page-btn {
+  background: linear-gradient(145deg, #007bff, #0056b3); 
   border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
+  color: #fff;
+  padding: 10px 16px;
   font-weight: 600;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  min-width: 40px;
+  text-align: center;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.25);
 }
 
-.pagination button:hover {
-  background-color: #ccc;
+.contest-page-btn:hover:not(:disabled) {
+  background: linear-gradient(145deg, #0056b3, #007bff);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.35);
 }
 
-.pagination button.active {
-  background-color: #4caf50;
+.contest-page-btn.active {
+  background: linear-gradient(135deg, #4caf50, #2ecc71); 
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  transform: scale(1.05);
   color: #fff;
 }
 
-.pagination button:disabled {
+.contest-page-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  filter: brightness(0.8);
+}
+
+.contest-ellipsis {
+  color: #e0e0e0;
+  font-weight: bold;
+  font-size: 1rem;
+  padding: 0 6px;
+  user-select: none;
 }

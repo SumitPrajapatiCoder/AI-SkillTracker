@@ -147,8 +147,12 @@ function Chatbot() {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") handleSend();
+    if (e.key === "Enter") {
+      e.preventDefault(); 
+      handleSend();
+    }
   };
+
 
   const toggleDarkMode = () => {
     setDarkMode((prev) => {

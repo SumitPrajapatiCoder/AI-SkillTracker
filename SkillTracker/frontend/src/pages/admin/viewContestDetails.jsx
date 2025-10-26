@@ -129,7 +129,7 @@ const ContestView = () => {
             ))}
 
             {totalPages > 1 && (
-                <div className="pagination">
+                <div className="view-pagination">
                     <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
@@ -139,13 +139,17 @@ const ContestView = () => {
 
                     {Array.from({ length: totalPages }, (_, i) => i + 1)
                         .filter((page) => {
-                            return page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                            return (
+                                page === 1 ||
+                                page === totalPages ||
+                                (page >= currentPage - 1 && page <= currentPage + 1)
+                            );
                         })
                         .map((page, i, arr) => {
                             if (i > 0 && page - arr[i - 1] > 1) {
                                 return (
                                     <React.Fragment key={page}>
-                                        <span style={{ padding: "0 4px" }}>...</span>
+                                        <span>...</span>
                                         <button
                                             onClick={() => handlePageChange(page)}
                                             className={currentPage === page ? "active" : ""}
@@ -174,6 +178,7 @@ const ContestView = () => {
                     </button>
                 </div>
             )}
+
         </div>
     );
 };
