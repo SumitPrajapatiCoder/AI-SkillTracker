@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "../api/axiosInstance"
+ import axios from "axios";
 import StudyPlanText from "./studyText";
 import { toast } from "react-toastify";
 import "../styles/study_plane.css";
@@ -24,7 +24,7 @@ const StudyPlan = () => {
       setError("");
       try {
         const token = localStorage.getItem("token");
-        const res = await api.get("/api/v1/user/study-plan", {
+        const res = await  axios. get("/api/v1/user/study-plan", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.data.success) {
@@ -57,7 +57,7 @@ const StudyPlan = () => {
     setError("");
     try {
       const token = localStorage.getItem("token");
-      const res = await api.get(
+      const res = await  axios. get(
         `/api/v1/user/study-plan?language=${encodeURIComponent(language)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -86,7 +86,7 @@ const StudyPlan = () => {
     setSavingLang(language);
     try {
       const token = localStorage.getItem("token");
-      const res = await api.post(
+      const res = await  axios. post(
         "/api/v1/user/study-plan/save",
         { language, studyPlan: studyPlansByLanguage[language] },
         { headers: { Authorization: `Bearer ${token}` } }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import api from "../api/axiosInstance"
+ import axios from "axios";
 import { toast } from "react-toastify";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
@@ -25,7 +25,7 @@ const QuizLanguage = () => {
     const fetchQuestions = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await api.get(`/api/v1/quiz/get-quiz/${language}`, {
+        const res = await  axios. get(`/api/v1/quiz/get-quiz/${language}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setAllQuestions(res.data.data || []);
@@ -98,7 +98,7 @@ const QuizLanguage = () => {
 
       try {
         const token = localStorage.getItem("token");
-        await api.post(
+        await  axios. post(
           "/api/v1/user/save-quiz-result",
           { language, correct: finalScore, total: questions.length, playedQuestions },
           { headers: { Authorization: `Bearer ${token}` } }

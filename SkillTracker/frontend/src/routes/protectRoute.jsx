@@ -12,7 +12,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import api from "../api/axiosInstance"
+ import axios from "axios";
 
 const ProtectedRoute = ({ children }) => {
   const [isValid, setIsValid] = useState(null);
@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children }) => {
       }
 
       try {
-        const res = await api.post(
+        const res = await  axios. post(
           "/api/v1/user/get_User_data",
           {},
           {

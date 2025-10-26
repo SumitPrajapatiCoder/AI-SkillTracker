@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../api/axiosInstance"
+ import axios from "axios";
 import { toast } from "react-toastify";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
@@ -24,7 +24,7 @@ const Contest = () => {
     const fetchContest = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await api.get(`/api/v1/user/contest/${id}`, {
+        const res = await  axios. get(`/api/v1/user/contest/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -101,7 +101,7 @@ const Contest = () => {
 
       try {
         const token = localStorage.getItem("token");
-        const res = await api.post(
+        const res = await  axios. post(
           "/api/v1/user/contestSubmit",
           {
             contestId: contest._id,
