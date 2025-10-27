@@ -45,8 +45,17 @@ const UserDetails = () => {
                 <Descriptions.Item label="Email">{user.email}</Descriptions.Item>
                 <Descriptions.Item label="Role">{user.isAdmin ? "Admin" : "User"}</Descriptions.Item>
                 <Descriptions.Item label="Status">{user.isBlocked ? "Blocked" : "Active"}</Descriptions.Item>
-                <Descriptions.Item label="Profile Image URL">{user.profileImage}</Descriptions.Item>
-                <Descriptions.Item label="Profile Image"><img src={user.profileImage} /></Descriptions.Item>
+               
+                <Descriptions.Item label="Profile Image URL">
+                    <span className="profile-image-url">{user.profileImage}</span>
+                </Descriptions.Item>
+                <Descriptions.Item label="Profile Image">
+                    <div className="profile-image-container">
+                        <img src={user.profileImage} alt={`${user.name} Profile`} />
+                    </div>
+                </Descriptions.Item>
+
+
                 <Descriptions.Item label="Created At">{new Date(user.createdAt).toLocaleString()}</Descriptions.Item>
                 <Descriptions.Item label="Updated At">{new Date(user.updatedAt).toLocaleString()}</Descriptions.Item>
             </Descriptions>
