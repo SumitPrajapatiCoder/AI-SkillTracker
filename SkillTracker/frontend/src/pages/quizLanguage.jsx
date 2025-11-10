@@ -21,6 +21,11 @@ const QuizLanguage = () => {
 
   const intervalRef = useRef(null);
 
+
+  const cleanCode = (code = "") =>
+    code.replace(/```[a-zA-Z]*/g, "").replace(/```/g, "").trim();
+
+
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
@@ -98,7 +103,7 @@ const QuizLanguage = () => {
 
       try {
         const token = localStorage.getItem("token");
-        await  axios. post(
+        await  axios.post(
           "/api/v1/user/save-quiz-result",
           { language, correct: finalScore, total: questions.length, playedQuestions },
           { headers: { Authorization: `Bearer ${token}` } }
@@ -153,6 +158,8 @@ const QuizLanguage = () => {
     if (current > 0) setCurrent((c) => c - 1);
   };
 
+  const highlightHTML = (text) => hljs.highlightAuto(cleanCode(text)).value;
+
   if (completed) {
     const finalScore = questions.reduce(
       (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
@@ -169,20 +176,23 @@ const QuizLanguage = () => {
 
         <div className="review-section">
           {questions.map((q, idx) => {
-            const highlightedQ = hljs.highlightAuto(q.question).value;
             return (
               <div key={idx} className="review-question-card">
                 <div className="review-question-header">
                   <span>Question {idx + 1}</span>
                 </div>
 
-                <pre className="review-question-text">
-                  <code dangerouslySetInnerHTML={{ __html: highlightedQ }} />
-                </pre>
+               <pre className="review-question-text">
+                <code
+                  dangerouslySetInnerHTML={{
+                    __html: highlightHTML(q.question),
+                  }}
+                />
+              </pre>
 
                 <div className="review-options">
                   {q.options.map((opt, i) => {
-                    const highlightedOpt = hljs.highlightAuto(opt).value;
+                    const highlightedOpt = highlightHTML(opt);
                     const isCorrect = opt === q.correctAnswer;
                     const isSelected = answers[idx] === opt;
 
@@ -242,7 +252,6 @@ const QuizLanguage = () => {
   const q = questions[current];
   const minutes = Math.floor(timer / 60);
   const seconds = timer % 60;
-  const highlightedHTML = hljs.highlightAuto(q.question).value;
   const selectedOption = answers[current] || null;
 
   return (
@@ -269,12 +278,12 @@ const QuizLanguage = () => {
 
       <div className="question-box">
         <pre>
-          Q{current + 1}: <code dangerouslySetInnerHTML={{ __html: highlightedHTML }} />
+          Q{current + 1}: <code dangerouslySetInnerHTML={{ __html: highlightHTML(q.question) }} />
         </pre>
 
         <div className="options-list">
           {q.options.map((opt, idx) => {
-            const highlightedOpt = hljs.highlightAuto(opt).value;
+            const highlightedOpt = highlightHTML(opt);
             const isSelected = selectedOption === opt;
 
             return (

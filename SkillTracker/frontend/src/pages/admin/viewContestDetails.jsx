@@ -15,6 +15,11 @@ const ContestView = () => {
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const contestsPerPage = 1; 
+
+    const cleanCode = (code) =>
+        code.replace(/```[a-zA-Z]*/g, "").replace(/```/g, "").trim();
+
+
     const fetchContests = async () => {
         setLoading(true);
         try {
@@ -39,9 +44,21 @@ const ContestView = () => {
         fetchContests();
     }, []);
 
+
     useEffect(() => {
-        hljs.highlightAll();
-    }, [contests]);
+        hljs.configure({ ignoreUnescapedHTML: true });
+
+        const timer = setTimeout(() => {
+            document.querySelectorAll("pre code").forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        }, 100);
+
+        return () => clearTimeout(timer);
+    }, [contests, currentPage]);
+
+
+
 
     const handleDeleteContest = async (id) => {
         const result = await MySwal.fire({
@@ -106,7 +123,7 @@ const ContestView = () => {
                                     <strong>Q{qidx + 1}:</strong> ({q.language}, {q.difficulty})
                                 </p>
                                 <pre>
-                                    <code className="hljs">{q.question}</code>
+                                    <code className="hljs">{cleanCode(q.question)}</code>
                                 </pre>
                                 <ul className="options-list">
                                     {q.options.map((opt, i) => (
@@ -114,7 +131,7 @@ const ContestView = () => {
                                     ))}
                                 </ul>
                                 <p className="correct-answer-display">
-                                    <strong>Answer:</strong> {q.correctAnswer}
+                                    <strong>Answer:</strong> {cleanCode(q.correctAnswer)}
                                 </p>
                             </div>
                         ))}

@@ -5,7 +5,7 @@ const userModel = require("../models/userModel");
 const languageModel = require("../models/languageModel");
 const quizCardModel = require("../models/quizCardModel");
 const mockCardModel = require("../models/mockCardModel");
-const { addNotification }=require("./userControl");
+const { addNotification } = require("./userControl");
 
 // const OpenAI = require("openai");
 // const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -179,7 +179,7 @@ const uploadQuestion = async (req, res) => {
         message: `${type} question uploaded successfully`,
       });
     }
-    
+
     return res.status(400).send({ success: false, message: "Invalid input" });
   } catch (error) {
     console.log("Upload Error:", error);
@@ -190,27 +190,27 @@ const uploadQuestion = async (req, res) => {
 
 
 const deleteQuestion = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { type } = req.query;
+  try {
+    const { id } = req.params;
+    const { type } = req.query;
 
-        if (!id || !type || !["quiz", "mock"].includes(type)) {
-            return res.status(400).send({ success: false, message: "Invalid ID or type" });
-        }
-
-        const Model = type === "quiz" ? quizModel : mockModel;
-        const deleted = await Model.findByIdAndDelete(id);
-        await addNotification(req.userId, `Deleted one ${type} question (${deleted.language}).`);
-
-        if (!deleted) {
-            return res.status(404).send({ success: false, message: "Question not found" });
-        }
-
-        res.status(200).send({ success: true, message: "Question deleted" });
-    } catch (error) {
-        console.log("Delete Error:", error);
-        res.status(500).send({ success: false, message: "Delete failed" });
+    if (!id || !type || !["quiz", "mock"].includes(type)) {
+      return res.status(400).send({ success: false, message: "Invalid ID or type" });
     }
+
+    const Model = type === "quiz" ? quizModel : mockModel;
+    const deleted = await Model.findByIdAndDelete(id);
+    await addNotification(req.userId, `Deleted one ${type} question (${deleted.language}).`);
+
+    if (!deleted) {
+      return res.status(404).send({ success: false, message: "Question not found" });
+    }
+
+    res.status(200).send({ success: true, message: "Question deleted" });
+  } catch (error) {
+    console.log("Delete Error:", error);
+    res.status(500).send({ success: false, message: "Delete failed" });
+  }
 };
 
 
@@ -328,13 +328,13 @@ const deleteLanguage = async (req, res) => {
 
 
 const listAllUsers = async (req, res) => {
-    try {
-        const users = await userModel.find().select("-password");
-        res.status(200).send({ success: true, data: users });
-    } catch (error) {
-        console.log("User List Error:", error);
-        res.status(500).send({ success: false, message: "Failed to fetch users" });
-    }
+  try {
+    const users = await userModel.find().select("-password");
+    res.status(200).send({ success: true, data: users });
+  } catch (error) {
+    console.log("User List Error:", error);
+    res.status(500).send({ success: false, message: "Failed to fetch users" });
+  }
 };
 
 const userDetailsById = async (req, res) => {
@@ -639,6 +639,21 @@ const createContest = async (req, res) => {
 
     await addNotification(req.userId, `Upload contest Questions Successfully (${contest._id}).`);
 
+
+    const allUsers = await userModel.find({ _id: { $ne: adminId } });
+
+    const notificationMessage = `
+Upcoming Contest Alert!
+Contest ID: ${contest._id}
+Date & Time: ${contest.publishDetails.formatted}
+Total Questions: ${contest.questions.length}
+Duration: ${timeDuration} mins
+`;
+
+    for (const user of allUsers) {
+      await addNotification(user._id, notificationMessage);
+    }
+
     res.status(201).json({
       success: true,
       message: "Contest created successfully",
@@ -657,7 +672,7 @@ const getAllContests = async (req, res) => {
 
     const contests = await contestModel.find()
       .sort({ createdAt: -1 })
-      .lean(); 
+      .lean();
 
     if (!contests || contests.length === 0) {
       return res.status(404).json({ message: "No contests found" });
@@ -698,16 +713,16 @@ const deleteContest = async (req, res) => {
 
 
 module.exports = {
-    uploadQuestion,
-    deleteQuestion,
-    createContest,
-    getAllContests,
-    deleteContest,
-    generateContestQuestions,
-    listAllQuestions,
-    listAllUsers,
-    generateAIQuestion,
-    editQuestion,userDetailsById,
-    blockUser,unblockUser,deleteUser,toggleAdminRole,deleteLanguage,
-  uploadLanguage,getLanguages,addCardDetails,getQuizCardDetails,getMockCardDetails,deleteCard,updateCard
+  uploadQuestion,
+  deleteQuestion,
+  createContest,
+  getAllContests,
+  deleteContest,
+  generateContestQuestions,
+  listAllQuestions,
+  listAllUsers,
+  generateAIQuestion,
+  editQuestion, userDetailsById,
+  blockUser, unblockUser, deleteUser, toggleAdminRole, deleteLanguage,
+  uploadLanguage, getLanguages, addCardDetails, getQuizCardDetails, getMockCardDetails, deleteCard, updateCard
 };

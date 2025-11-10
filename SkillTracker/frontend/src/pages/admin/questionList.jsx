@@ -136,9 +136,18 @@ const AdminQuestionList = () => {
     }
   };
 
+
   useEffect(() => {
-    hljs.highlightAll();
-  }, [questions]);
+    const timer = setTimeout(() => {
+      document.querySelectorAll("pre code").forEach((block) => {
+        hljs.highlightElement(block);
+      });
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [questions, currentPage]);
+
+
 
   useEffect(() => {
     fetchQuestions();

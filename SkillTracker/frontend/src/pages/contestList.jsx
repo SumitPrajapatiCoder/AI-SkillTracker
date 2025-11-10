@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
- import axios from "axios";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
     FaTrophy,
@@ -8,8 +8,15 @@ import {
     FaCalendarAlt,
     FaHistory,
     FaClock,
+    FaSearch,
 } from "react-icons/fa";
 import "../styles/contestList.css";
+
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
+const MySwal = withReactContent(Swal);
+
 
 const ContestList = () => {
     const [languages, setLanguages] = useState([]);
@@ -19,6 +26,8 @@ const ContestList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [filteredContests, setFilteredContests] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
     const contestsPerPage = 6; 
 
     const navigate = useNavigate();
@@ -28,7 +37,7 @@ const ContestList = () => {
             try {
                 const token = localStorage.getItem("token");
                 if (!token) throw new Error("No token found");
-                const res = await  axios. get("/api/v1/user/get-languages", {
+                const res = await axios.get("/api/v1/user/get-languages", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 if (res.data.success && res.data.data) {
@@ -49,9 +58,9 @@ const ContestList = () => {
                 if (!token) throw new Error("No token found");
 
                 const [contestsRes, leaderboardRes, userRankRes] = await Promise.all([
-                     axios. get("/api/v1/user/contestAll", { headers: { Authorization: `Bearer ${token}` } }),
-                     axios. get("/api/v1/user/leaderboard/global", { headers: { Authorization: `Bearer ${token}` } }),
-                     axios. get("/api/v1/user/user-rank", { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get("/api/v1/user/contestAll", { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get("/api/v1/user/leaderboard/global", { headers: { Authorization: `Bearer ${token}` } }),
+                    axios.get("/api/v1/user/user-rank", { headers: { Authorization: `Bearer ${token}` } }),
                 ]);
 
                 let contestData = contestsRes.data.contests || [];
@@ -71,7 +80,9 @@ const ContestList = () => {
                 });
 
                 setContests(contestData);
+                setFilteredContests(contestData); 
                 setLeaderboard(leaderboardRes.data.leaderboard || []);
+
                 if (userRankRes.data.success && userRankRes.data.userRank) {
                     setUserRank(userRankRes.data.userRank);
                 }
@@ -86,6 +97,68 @@ const ContestList = () => {
         fetchData();
     }, []);
 
+    
+    useEffect(() => {
+        if (contests.length === 0) return;
+
+        const interval = setInterval(() => {
+            const now = new Date();
+
+            contests.forEach((contest) => {
+                const start = new Date(contest.publishDetails.date);
+                const end = new Date(start.getTime() + contest.timeDuration * 60000);
+
+                const liveKey = `contestLive_${contest._id}`;
+                const refreshedKey = `contestRefreshed_${contest._id}`;
+
+                const isLive = now >= start && now <= end;
+
+                if (isLive && !localStorage.getItem(liveKey)) {
+                    localStorage.setItem(liveKey, "true");
+                    localStorage.removeItem(refreshedKey);
+                    clearInterval(interval);
+                    window.location.reload();
+                }
+
+                if (now > end && localStorage.getItem(liveKey)) {
+                    localStorage.removeItem(liveKey);
+
+                    const alreadyRefreshed = localStorage.getItem(refreshedKey);
+                    if (!alreadyRefreshed) {
+                        localStorage.setItem(refreshedKey, "true");
+                        clearInterval(interval);
+                        window.location.reload();
+                    }
+                }
+            });
+        }, 5000); 
+        return () => clearInterval(interval);
+    }, [contests]);
+
+
+
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setFilteredContests(contests);
+            return;
+        }
+        const term = searchTerm.toLowerCase();
+        const filtered = contests.filter((contest) => {
+            const idMatch = contest._id.toLowerCase().includes(term);
+            const dateString = new Date(contest.publishDetails.date).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+            }).toLowerCase();
+            const dateMatch = dateString.includes(term);
+            return idMatch || dateMatch;
+        });
+        setFilteredContests(filtered);
+        setCurrentPage(1);
+    }, [searchTerm, contests]);
+
+
+
     const getStatus = (contest) => {
         const now = new Date();
         const start = new Date(contest.publishDetails.date);
@@ -98,14 +171,58 @@ const ContestList = () => {
 
     const handleContestClick = (contest) => {
         const status = getStatus(contest);
-        if (status === "upcoming") return; 
+        if (status === "upcoming") return;
+
+        const contestKey = `contestGiven_${contest._id}`;
+        const now = new Date();
+
+        if (localStorage.getItem(contestKey) === "true") {
+            MySwal.fire({
+                icon: "info",
+                title: "Contest Already Attempted",
+                text: "You have already attempted this live contest. You can only play once during the live duration!",
+                confirmButtonColor: "#3085d6",
+                confirmButtonText: "OK",
+            });
+            return;
+        }
+
+        if (status === "live") {
+            const start = new Date(contest.publishDetails.date);
+            const end = new Date(start.getTime() + contest.timeDuration * 60000);
+            const timeLeft = end - now;
+
+            MySwal.fire({
+                icon: "success",
+                title: "Contest Started!",
+                text: "Good luck! The contest is live now. Would you like to start?",
+                showCancelButton: true,
+                confirmButtonColor: "#28a745",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Start Contest",
+                cancelButtonText: "Not Now",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.setItem(contestKey, "true");
+                    navigate(`/contest/${contest._id}`);
+
+                    if (timeLeft > 0) {
+                        setTimeout(() => {
+                            localStorage.removeItem(contestKey);
+                        }, timeLeft);
+                    }
+                }
+            });
+            return;
+        }
         navigate(`/contest/${contest._id}`);
     };
 
-    const totalPages = Math.ceil(contests.length / contestsPerPage);
+
+    const totalPages = Math.ceil(filteredContests.length / contestsPerPage);
     const indexOfLast = currentPage * contestsPerPage;
     const indexOfFirst = indexOfLast - contestsPerPage;
-    const currentContests = contests.slice(indexOfFirst, indexOfLast);
+    const currentContests = filteredContests.slice(indexOfFirst, indexOfLast);
 
     const handlePageChange = (page) => {
         if (page < 1 || page > totalPages) return;
@@ -119,6 +236,16 @@ const ContestList = () => {
     return (
         <section className="contest-list-wrapper">
             <h2><FaTrophy style={{ marginRight: "8px" }} /> Contests</h2>
+
+            <div className="contest-search-container">
+                <input
+                    type="text"
+                    className="contest-search-input"
+                    placeholder="Search by Contest ID or Date (e.g., Mar 12 2025)"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
 
             <div className="language-list">
                 <h3>Contest Questions Are Based On These Languages</h3>

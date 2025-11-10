@@ -114,7 +114,7 @@ const verifyPasswordController = async (req, res) => {
         if (!isMatch) {
             return res.status(400).send({ success: false, message: "Current password is incorrect" });
         }
-    
+
         await addNotification(userId, "Password Verified Successfully !!")
         res.status(200).send({ success: true, message: "Password verified" });
     } catch (error) {
@@ -223,7 +223,7 @@ const deleteProfileImageController = async (req, res) => {
         if (user.profileImage && user.profileImage.includes("cloudinary.com")) {
             try {
                 const parts = user.profileImage.split("/");
-                const fileName = parts[parts.length - 1].split(".")[0]; 
+                const fileName = parts[parts.length - 1].split(".")[0];
                 await cloudinary.uploader.destroy(`user_profiles/${fileName}`);
             } catch (err) {
                 console.warn("Failed to delete old image from Cloudinary:", err.message);
@@ -261,7 +261,7 @@ const saveQuizResult = async (req, res) => {
             language,
             correct,
             total,
-            playedQuestions, 
+            playedQuestions,
         });
 
         await user.save();
@@ -331,7 +331,7 @@ const getMockStatus = async (req, res) => {
             (c) => c.language === language && c.completed === true
         );
 
-        const disabled = !!entry; 
+        const disabled = !!entry;
 
         res.status(200).json({ success: true, disable: disabled, date: entry ? entry.date : null });
     } catch (err) {
@@ -401,7 +401,16 @@ Goal: Produce a **fully formatted, mentor-style HTML study plan** for ${lang} th
 
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
             const result = await model.generateContent([prompt]);
-            return result.response.text();
+            let rawResponse = result?.response?.text() || "<p>No response from AI.</p>";
+
+            const cleanedResponse = rawResponse
+                .replace(/^```[\s\S]*?html\s*/i, "")
+                .replace(/^```[\s\S]*?\n/i, "")
+                .replace(/```$/i, "")
+                .trim();
+
+            return cleanedResponse;
+
         }
 
         if (language) {
@@ -423,7 +432,7 @@ Goal: Produce a **fully formatted, mentor-style HTML study plan** for ${lang} th
             }
         }
         await user.save();
-        
+
         return res.status(200).json({
             success: true,
             studyPlansByLanguage: Object.fromEntries(user.studyPlans),
@@ -445,7 +454,7 @@ const getStudyPlans = async (req, res) => {
     try {
         const userId = req.userId;
         const user = await userModel.findById(userId).select("studyPlans");
-        
+
         if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
         return res.status(200).json({ success: true, studyPlansByLanguage: user.studyPlans || {} });
@@ -541,7 +550,18 @@ Goal: Produce a **fully formatted, mentor-style HTML roadmap** for ${lang}, focu
 
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
             const result = await model.generateContent([prompt]);
-            return result.response.text();
+
+
+            let rawResponse = result?.response?.text() || "<p>No response from AI.</p>";
+
+            const cleanedResponse = rawResponse
+                .replace(/^```[\s\S]*?html\s*/i, "")
+                .replace(/^```[\s\S]*?\n/i, "")
+                .replace(/```$/i, "")
+                .trim();
+
+            return cleanedResponse;
+
         }
 
         if (language) {
@@ -618,14 +638,14 @@ const saveRoadmap = async (req, res) => {
 
 const getUserProgress = async (req, res) => {
     try {
-        const userId = req.userId; 
+        const userId = req.userId;
         const user = await userModel.findById(userId).select("quizHistory");
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-       
+
         const progress = {};
         user.quizHistory.forEach(entry => {
             if (!progress[entry.language]) {
@@ -643,40 +663,40 @@ const getUserProgress = async (req, res) => {
 };
 
 
- const getLanguages = async (req, res) => {
-  try {
-    const langs = await languageModel.find().sort({ name: 1 });
-    res.status(200).send({ success: true, data: langs });
-  } catch (error) {
-    console.error("Get Languages Error:", error);
-    res.status(500).send({ success: false, message: "Failed to fetch languages" });
-  }
+const getLanguages = async (req, res) => {
+    try {
+        const langs = await languageModel.find().sort({ name: 1 });
+        res.status(200).send({ success: true, data: langs });
+    } catch (error) {
+        console.error("Get Languages Error:", error);
+        res.status(500).send({ success: false, message: "Failed to fetch languages" });
+    }
 };
 
 
 const getQuizCardDetails = async (req, res) => {
-  try {
-    const quizCards = await quizCardModel.find().sort({ createdAt: -1 });
-    return res.status(200).json({ success: true, data: quizCards });
-  } catch (error) {
-    console.error("Get Quiz Cards Error:", error);
-    return res.status(500).json({
-      error: "Failed to fetch quiz cards",
-      details: error.message,
-    });
-  }
+    try {
+        const quizCards = await quizCardModel.find().sort({ createdAt: -1 });
+        return res.status(200).json({ success: true, data: quizCards });
+    } catch (error) {
+        console.error("Get Quiz Cards Error:", error);
+        return res.status(500).json({
+            error: "Failed to fetch quiz cards",
+            details: error.message,
+        });
+    }
 };
 
 const getMockCardDetails = async (req, res) => {
-  try {
-    const mockCards = await mockCardModel.find().sort({ createdAt: -1 });
-    return res.status(200).json({ success: true, data: mockCards });
-  } catch (error) {
-    return res.status(500).json({
-      error: "Failed to fetch mock cards",
-      details: error.message,
-    });
-  }
+    try {
+        const mockCards = await mockCardModel.find().sort({ createdAt: -1 });
+        return res.status(200).json({ success: true, data: mockCards });
+    } catch (error) {
+        return res.status(500).json({
+            error: "Failed to fetch mock cards",
+            details: error.message,
+        });
+    }
 };
 
 
@@ -705,8 +725,23 @@ const chatbotController = async (req, res) => {
         const userMessage = messages[messages.length - 1].text
             || messages[messages.length - 1].parts?.[0]?.text;
 
-        const user = await userModel.findById(userId).select("chatHistory");
-        const history = user?.chatHistory || [];
+
+        const user = await userModel.findById(userId).lean();
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        const userDetails = Object.entries(user)
+            .map(([key, value]) => {
+                if (typeof value === "object") {
+                    return `${key}: ${JSON.stringify(value, null, 2)}`;
+                }
+                return `${key}: ${value}`;
+            })
+            .join("\n");
+
+        const users = await userModel.findById(userId).select("chatHistory");
+        const history = users?.chatHistory || [];
         const recentHistory = history.slice(-20);
 
         let conversationContext = "";
@@ -735,46 +770,160 @@ const chatbotController = async (req, res) => {
 
         let botResponse = "";
 
+
         if (isAboutSite) {
-            botResponse = `Welcome to **SkillTracker**, an **AI-powered learning platform** built to help you master programming in a structured and personalized way!   
+            botResponse = `
+  <div style="font-family: 'Segoe UI', sans-serif; color: #1e293b; line-height: 1.6; background: #f8fafc; padding: 20px; border-radius: 10px;">
+    <h2 style="color: #2563eb;">Welcome to <strong>SkillTracker</strong> 🎯</h2>
+    <p>
+      <strong>SkillTracker</strong> is an <strong>AI-powered learning platform</strong> built to help you master programming in a structured and personalized way!
+    </p>
 
-Here’s what **SkillTracker** offers:  
+    <h3 style="color: #16a34a;">✨ What SkillTracker Offers:</h3>
+    <ul style="margin-left: 20px;">
+      <li><strong>Interactive Quizzes & Mock Tests:</strong> Practice programming with topic-wise quizzes and mock tests for <strong>Java</strong>, <strong>C</strong>, and <strong>C++</strong>.</li>
+      <li><strong>Certificates:</strong> Earn certificates after completing mock tests to showcase your skills.</li>
+      <li><strong>AI-Powered Study Plans & Roadmaps:</strong> Automatically generated personalized learning paths based on your quiz results.</li>
+      <li><strong>Built-in AI Chatbot:</strong> Instantly solve coding problems or clarify doubts through an AI assistant.</li>
+      <li><strong>User Progress Tracking:</strong> Monitor your progress, view quiz history, and check which mocks are pending or completed.</li>
+    </ul>
 
-- **Interactive Quizzes & Mock Tests:** Practice programming with topic-wise quizzes and mock tests for languages like **Java**, **C**, and **C++**.  
-- **Certificates:** After completing mock tests, earn certificates to showcase your skills and progress.  
-- **AI-Powered Study Plans & Roadmaps:** Based on your quiz performance and chosen language, SkillTracker automatically generates **personalized study plans and learning roadmaps** to guide your journey.  
-- **Built-in AI Chatbot:** Chat with our integrated AI assistant to solve coding problems, clear doubts, or get quick explanations.  
-- **User Progress Tracking:** View your detailed progress, check quiz history, and track which mocks are completed or pending.  
+    <h3 style="color: #9333ea;">🧠 Technology Stack:</h3>
+    <ul style="margin-left: 20px;">
+      <li><strong>Frontend:</strong> HTML, CSS, React.js (Vite)</li>
+      <li><strong>Backend:</strong> Node.js, Express.js, JavaScript</li>
+      <li><strong>Database:</strong> MongoDB</li>
+    </ul>
 
-**Technology Stack:**  
-- **Frontend:** HTML, CSS, React.js (Vite)  
-- **Backend:** Node.js, Express.js, JavaScript  
-- **Database:** MongoDB  
+    <p style="margin-top: 15px; font-weight: 500;">
+      In short, <strong>SkillTracker</strong> blends AI-driven learning, progress tracking, and interactive practice to make coding education 
+      <span style="color:#16a34a;">smarter, personalized, and results-driven</span>.
+    </p>
+  </div>
+  `;
 
-In short, **SkillTracker** combines AI-driven learning, progress tracking, and interactive practice to make coding education smarter, personalized, and results-driven. `;
-        
-} else {
+        } else {
+            //             const formattedPrompt = `
+            // You are a professional and engaging AI assistant designed for a web-based chat interface.  
+            // Your response will be rendered directly inside an <iframe>, so you must respond **only using HTML with inline CSS** — no markdown, JavaScript, or external files.
+
+            // 🎨 **Style & Formatting Rules:**
+            // - Wrap everything inside a main <div> with a clean, modern look.
+            // - Use inline CSS for all styling — including gradients, borders, shadows, and spacing.
+            // - Use system-friendly fonts like 'Segoe UI', 'Poppins', or 'Inter'.
+            // - Incorporate **subtle color gradients**, **soft shadows**, and **emoji accents** to make content friendly and eye-catching.
+            // - Structure content with <p>, <strong>, <ul>, <li>, and <span> tags.
+            // - Keep paragraphs short and conversational.
+            // - Avoid <html>, <head>, <body>, or external references.
+
+            // 🧠 **Tone:**
+            // - Warm, clear, and professional — like a knowledgeable friend guiding the user.
+            // - Use friendly icons (✨💡📘🚀✅ etc.) for engagement.
+            // - Add mini sections, highlights, and smooth readability.
+
+            // ---
+
+            // 💬 **Conversation Context:**
+            // Below is the recent chat history between the user and the assistant.
+            // Use it to understand the flow, prior questions, and references so your answer feels naturally connected.
+
+            // \`\`\`
+            // ${conversationContext}
+            // \`\`\`
+
+            // ---
+
+
+            // Now perform these steps:
+
+            // 1. **Analyze** the user's latest message below:
+            //    \`\`\`
+            //    ${userMessage}
+            //    \`\`\`
+            //    - Identify if the message is a question, request, opinion, or feedback.
+            //    - Detect the topic or intent (e.g., “quiz help”, “AI feature”, “mock test”, etc.).
+
+            // 2. **Generate your HTML response** that:
+            //    - Clearly addresses the user’s intent.
+            //    - Uses visually appealing layout & inline CSS to attract attention.
+            //    - Emphasizes key ideas using gradient text, icons, and highlighted spans.
+            //    - Feels interactive and human — not robotic.
+
+            // 3. **Output only your final HTML response**
+
+            // Generate your final response now.
+            // `;
+
 
             const formattedPrompt = `
-You are a professional assistant. 
-This is the conversation so far:
+You are a professional and engaging AI assistant designed for a web-based chat interface.  
+Your response will be rendered directly inside an <iframe>, so you must respond **only using HTML with inline CSS** — no markdown, JavaScript, or external files.
+
+🎨 **Style & Formatting Rules:**
+- Wrap everything inside a main <div> with a clean, modern look.
+- Use inline CSS for all styling — including gradients, borders, shadows, and spacing.
+- Use system-friendly fonts like 'Segoe UI', 'Poppins', or 'Inter'.
+- Incorporate **subtle color gradients**, **soft shadows**, and **emoji accents** to make content friendly and eye-catching.
+- Structure content with <p>, <strong>, <ul>, <li>, and <span> tags.
+- Keep paragraphs short and conversational.
+- Avoid <html>, <head>, <body>, or external references.
+
+🧠 **Tone:**
+- Warm, clear, and professional — like a knowledgeable friend guiding the user.
+- Use friendly icons (✨💡📘🚀✅ etc.) for engagement.
+- Add mini sections, highlights, and smooth readability.
+
+---
+
+User Details:
+\`\`\`
+${userDetails}
+\`\`\`
+------
+
+
+
+💬 **Conversation Context:**
+Below is the recent chat history between the user and the assistant.
+Use it to understand the flow, prior questions, and references so your answer feels naturally connected.
+
+
+\`\`\`
 ${conversationContext}
+\`\`\`
 
-Now the user says: "${userMessage}"
+----
 
-Respond in a friendly, readable, and engaging way, like ChatGPT would. 
-- Use **bold** for important terms
-- Use short paragraimport StudyPlan from './../../frontend/src/pages/study_plane';
-phs for clarity
-- Use bullet points or numbered lists
-- Avoid markdown headings like ###
-- Make it conversational and professional
-- Keep it suitable for direct chat display (no raw markdown)
+Now perform these steps:
+
+1. **Analyze** the user's latest message below:
+   \`\`\`
+   ${userMessage}
+   \`\`\`
+   - Identify if the message is a question, request, opinion, or feedback.
+   - Detect the topic or intent (e.g., “quiz help”, “AI feature”, “mock test”, etc.).
+
+2. **Generate your HTML response** that:
+   - Clearly addresses the user’s intent.
+   - Uses visually appealing layout & inline CSS to attract attention.
+   - Emphasizes key ideas using gradient text, icons, and highlighted spans.
+   - Feels interactive and human — not robotic.
+
+3. **Output only your final HTML response**
+
+Generate your final response now.
 `;
+
 
             const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
             const result = await model.generateContent([{ text: formattedPrompt }]);
-            botResponse = result?.response?.text() || "No response from AI.";
+            let rawResponse = result?.response?.text() || "<p>No response from AI.</p>";
+
+            botResponse = rawResponse
+                .replace(/^```[\s\S]*?html\s*/i, "")
+                .replace(/^```[\s\S]*?\n/i, "")
+                .replace(/```$/i, "")
+                .trim();
         }
 
         await userModel.findByIdAndUpdate(userId, {
@@ -841,7 +990,8 @@ const clearChatHistory = async (req, res) => {
 
 
 
-const addNotification = async (userId,message) => {
+
+const addNotification = async (userId, message) => {
     try {
         await userModel.findByIdAndUpdate(userId, {
             $push: { notifications: { message } },
@@ -890,7 +1040,7 @@ const markAsRead = async (req, res) => {
 
 const deleteNotification = async (req, res) => {
     try {
-        const { notificationId } = req.params; 
+        const { notificationId } = req.params;
         const userId = req.userId;
 
         const result = await userModel.updateOne(
@@ -1038,6 +1188,13 @@ const submitContest = async (req, res) => {
                 return 0;
             });
 
+
+            await Promise.all(
+                leaderboard.map((user, index) =>
+                    userModel.findByIdAndUpdate(user.userId, { contestRank: index + 1 })
+                )
+            );
+
             const rankIndex = leaderboard.findIndex(u => u.userId === userId);
             const userRank = rankIndex !== -1 ? rankIndex + 1 : null;
 
@@ -1084,7 +1241,7 @@ const progressContestByUser = async (req, res) => {
             const percentage = ((contest.score / totalQ) * 100).toFixed(2);
 
             return {
-                contestId: contest.contestId,   
+                contestId: contest.contestId,
                 score: contest.score,
                 totalQuestions: totalQ,
                 percentage: Number(percentage),
@@ -1225,9 +1382,9 @@ const getAllContests = async (req, res) => {
 module.exports = {
     loginController, registerController, getUserInfo, updateProfileController, deleteProfileImageController,
     uploadProfileImageController, chatbotController, getChatHistory, clearChatHistory, getGlobalLeaderboard,
-    getStudyPlans,saveStudyPlan,getRoadmaps,saveRoadmap,getUserProgress,getLanguages,getCompletedMocks,
-    saveQuizResult, getMockStatus, saveMockResult,generateStudyPlan,generateRoadMap,
-    getMockCardDetails, getQuizCardDetails, progressContestByUser,getUserRank,
-    addNotification,getNotifications,markAsRead,deleteNotification,
-    deleteAllNotifications, getContestUser, submitContest, getAllContests,verifyPasswordController
- };
+    getStudyPlans, saveStudyPlan, getRoadmaps, saveRoadmap, getUserProgress, getLanguages, getCompletedMocks,
+    saveQuizResult, getMockStatus, saveMockResult, generateStudyPlan, generateRoadMap,
+    getMockCardDetails, getQuizCardDetails, progressContestByUser, getUserRank,
+    addNotification, getNotifications, markAsRead, deleteNotification,
+    deleteAllNotifications, getContestUser, submitContest, getAllContests, verifyPasswordController
+};

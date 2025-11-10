@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
- import axios from "axios";
+import axios from "axios";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
 import { toast } from "react-toastify";
@@ -150,6 +150,7 @@ function Chatbot() {
     if (e.key === "Enter") {
       e.preventDefault(); 
       handleSend();
+      
     }
   };
 
@@ -205,10 +206,10 @@ function Chatbot() {
       }
     } catch (err) {
       toast.error("Error clearing chat: " + (err.response?.data?.message || err.message));
-      console.error("Error clearing chat:", err.message);
     }
   };
   
+
   const handleBubbleClick = (msg, idx) => {
     if (speakingRef.current !== null) speechSynthesis.cancel();
 
@@ -218,7 +219,17 @@ function Chatbot() {
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(msg.text);
+    let plainText = msg.text;
+    if (msg.role === "bot") {
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = msg.text;
+      plainText = tempDiv.innerText; 
+    }
+
+
+    const utterance = new SpeechSynthesisUtterance(plainText);
+    utterance.rate = 1;
+    utterance.pitch = 1;
     utterance.onend = () => {
       speakingRef.current = null;
       setActiveSoundIdx(null);
@@ -228,6 +239,8 @@ function Chatbot() {
     speakingRef.current = idx;
     setActiveSoundIdx(idx);
   };
+
+
 
   return (
     <div className={`chatbot-container ${darkMode ? "dark-mode" : ""}`}>
@@ -247,29 +260,58 @@ function Chatbot() {
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={`chat-bubble ${msg.role === "user" ? "from-user" : "from-bot"} ${activeSoundIdx === idx ? "active-sound" : ""}`}
+            className={`chat-bubble ${msg.role === "user" ? "from-user" : "from-bot"} ${activeSoundIdx === idx ? "active-sound" : ""
+              }`}
             onClick={() => handleBubbleClick(msg, idx)}
           >
             <strong>{msg.role === "user" ? user?.username || "You" : "Gemini"}</strong>
-            <div
-              className="bubble-content"
-              dangerouslySetInnerHTML={{
-                __html: msg.text.replace(/```([\s\S]*?)```/g, (match, p1) => `<pre><code>${p1}</code></pre>`),
-              }}
-            />
+
+            {msg.role === "bot" ? (
+              <iframe
+                srcDoc={msg.text}
+                sandbox="allow-same-origin"
+                className="bot-iframe"
+                title={`bot-${idx}`}
+                onLoad={(e) => {
+                  const iframe = e.target;
+                  try {
+                    iframe.style.height =
+                      iframe.contentWindow.document.body.scrollHeight + "px";
+                  } catch (err) {
+                    console.error("Iframe resize failed:", err);
+                  }
+                }}
+              ></iframe>
+            ) : (
+              <div className="bubble-content">{msg.text}</div>
+            )}
+
             {activeSoundIdx === idx && (
               <span className="volume-icon">
                 <FaVolumeUp />
               </span>
             )}
+
             <small>
-              {msg.time ? new Date(msg.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+              {msg.time
+                ? new Date(msg.time).toLocaleString("en-IN", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                })
+                : ""}
             </small>
           </div>
         ))}
+
+
         {loading && <div className="chat-bubble from-bot">Typing...</div>}
         <div ref={chatEndRef}></div>
       </div>
+
 
       <div className="input-row">
         <button onClick={handleMicClick} className="btn-mic">

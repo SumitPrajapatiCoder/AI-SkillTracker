@@ -66,6 +66,11 @@ const userSchema = new mongoose.Schema(
             type: String, 
             default: "",  
         },
+        
+        contestRank: {
+            type: Number,
+            default: null,
+        },
 
         quizHistory: [quizHistorySchema],
         mockHistory: [

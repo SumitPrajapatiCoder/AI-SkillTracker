@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
- import axios from "axios";
+import axios from "axios";
 import { toast } from "react-toastify";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
@@ -20,6 +20,10 @@ const Contest = () => {
   const intervalRef = useRef(null);
   const hasSubmittedRef = useRef(false);
 
+  const cleanCode = (code) =>
+    code.replace(/```[a-zA-Z]*/g, "").replace(/```/g, "").trim();
+
+  
   useEffect(() => {
     const fetchContest = async () => {
       try {
@@ -187,7 +191,7 @@ const Contest = () => {
 
 
   const q = questions[current];
-  const highlightedHTML = hljs.highlightAuto(q.question).value;
+  const highlightedHTML = hljs.highlightAuto(cleanCode(q.question)).value;
   const selectedOption = answers[current] || null;
 
   return (
