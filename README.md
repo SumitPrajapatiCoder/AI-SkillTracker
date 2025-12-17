@@ -169,8 +169,6 @@ SkillTracker/
 
 ## 📸 Screenshots
 
-(Space reserved for screenshots of the application)
-
 <img width="1348" height="608" alt="image" src="https://github.com/user-attachments/assets/ee830731-0f42-4603-a04f-d7b10be05849" />
 <img width="866" height="541" alt="image" src="https://github.com/user-attachments/assets/e55a2891-06c7-49b8-bda9-0692bc0c9e6c" />
 <img width="1049" height="544" alt="image" src="https://github.com/user-attachments/assets/aaa2a59d-96b0-4610-8942-c1ede32cb4c3" />
